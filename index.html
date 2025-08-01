@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>さんきゅうやきとり</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c1810, #4a2c1a);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        .game-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffa500;
+            font-size: 48px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            font-weight: bold;
+            z-index: 100;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 24px;
+            z-index: 100;
+        }
+
+        .customer {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 80px;
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+
+        .speech-bubble {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.5s ease;
+            z-index: 60;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid white;
+        }
+
+        .speech-bubble.good {
+            color: #4caf50;
+        }
+
+        .speech-bubble.bad {
+            color: #f44336;
+        }
+
+        .grill-area {
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(to top, #ff6b35, #d84315);
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 30px rgba(255, 107, 53, 0.5);
+            overflow: hidden;
+        }
+
+        .yakitori {
+            position: absolute;
+            bottom: 20px;
+            width: 80px;
+            height: 180px;
+            cursor: grab;
+            transition: transform 0.1s ease;
+            user-select: none;
+        }
+
+        .yakitori:active {
+            cursor: grabbing;
+        }
+
+        .yakitori.dragging {
+            z-index: 1000;
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .yakitori.flying {
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .stick {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 120px;
+            background: linear-gradient(to top, #d4af37, #b8860b);
+            border-radius: 3px;
+        }
+
+        .tsukune {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 45px;
+            height: 30px;
+            border-radius: 50%;
+            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.3);
+        }
+
+        .tsukune:nth-child(2) { top: 20px; }
+        .tsukune:nth-child(3) { top: 45px; }
+        .tsukune:nth-child(4) { top: 70px; }
+        .tsukune:nth-child(5) { top: 95px; }
+        .tsukune:nth-child(6) { top: 120px; }
+
+        /* 焼き加減のステージ */
+        .rare .tsukune {
+            background: linear-gradient(135deg, #ffb3ba, #ff7b7b);
+        }
+
+        .medium .tsukune {
+            background: linear-gradient(135deg, #deb887, #cd853f);
+        }
+
+        .perfect .tsukune {
+            background: linear-gradient(135deg, #cd853f, #a0522d);
+        }
+
+        .burnt .tsukune {
+            background: linear-gradient(135deg, #5d4037, #3e2723);
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffa500;
+            font-size: 18px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 24px;
+            display: none;
+            z-index: 200;
+        }
+
+        .restart-btn {
+            background: #ffa500;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #ff8c00;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+        }
+
+        .start-title {
+            color: #ffa500;
+            font-size: 64px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+
+        .start-btn {
+            background: #ffa500;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 32px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
+        }
+
+        .start-btn:hover {
+            background: #ff8c00;
+            transform: translateY(-2px);
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a, #ff9800, #f44336);
+            transition: width 0.1s linear;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .customer.happy {
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        .customer.angry {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-5deg); }
+            75% { transform: translateX(-50%) rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="start-screen" id="startScreen">
+        <div class="start-title">さんきゅうやきとり</div>
+        <button class="start-btn" onclick="startGameWithSound()">スタート</button>
+    </div>
+
+    <div class="game-title">さんきゅうやきとり</div>
+    
+    <div class="score-board">
+        <div>スコア: <span id="score">0</span></div>
+        <div>ミス: <span id="misses">0</span></div>
+    </div>
+
+    <div class="customer" id="customer">👨‍🍳</div>
+    <div class="speech-bubble" id="speech"></div>
+
+    <div class="grill-area" id="grill"></div>
+
+    <div class="instructions">
+        🔥 5個入りつくねをちょうどいい焼き加減で上にフリック！ 🔥<br>
+        レア→焼き中→完璧→焦げ
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2>ゲームオーバー！</h2>
+        <p>最終スコア: <span id="finalScore">0</span></p>
+        <button class="restart-btn" onclick="restartGame()">もう一度プレイ</button>
+    </div>
+
+    <script>
+        // 音声ファイルの管理
+        class SoundManager {
+            constructor() {
+                this.sounds = {
+                    bgm: new Audio('yaki.mp3'),
+                    start: new Audio('start.mp3'),
+                    flick: new Audio('omachi.mp3'),
+                    ok: new Audio('39.mp3'),
+                    ng: new Audio('kora.mp3'),
+                    gameover: new Audio('gong.mp3')
+                };
+                
+                // BGMをループ設定
+                this.sounds.bgm.loop = true;
+                this.sounds.bgm.volume = 0.3;
+                
+                // その他の音量調整
+                this.sounds.start.volume = 0.7;
+                this.sounds.flick.volume = 0.5;
+                this.sounds.ok.volume = 0.8;
+                this.sounds.ng.volume = 0.8;
+                this.sounds.gameover.volume = 0.9;
+                
+                // 音声ファイルが見つからない場合のエラーハンドリング
+                Object.keys(this.sounds).forEach(key => {
+                    this.sounds[key].addEventListener('error', (e) => {
+                        console.warn(`音声ファイル ${key}.mp3 が見つかりません`);
+                    });
+                });
+            }
+            
+            play(soundName) {
+                try {
+                    if (this.sounds[soundName]) {
+                        this.sounds[soundName].currentTime = 0;
+                        this.sounds[soundName].play().catch(e => {
+                            console.warn(`音声再生エラー: ${soundName}`, e);
+                        });
+                    }
+                } catch (e) {
+                    console.warn(`音声再生エラー: ${soundName}`, e);
+                }
+            }
+            
+            playBGM() {
+                try {
+                    this.sounds.bgm.currentTime = 0;
+                    return this.sounds.bgm.play().catch(e => {
+                        console.warn('BGM再生エラー:', e);
+                    });
+                } catch (e) {
+                    console.warn('BGM再生エラー:', e);
+                }
+            }
+            
+            stopBGM() {
+                this.sounds.bgm.pause();
+                this.sounds.bgm.currentTime = 0;
+            }
+            
+            stopAll() {
+                Object.values(this.sounds).forEach(sound => {
+                    sound.pause();
+                    sound.currentTime = 0;
+                });
+            }
+        }
+
+        class YakitoriGame {
+            constructor() {
+                this.score = 0;
+                this.misses = 0;
+                this.maxMisses = 5;
+                this.yakitoris = [];
+                this.nextYakitoriTime = 0;
+                this.yakitoriSpeed = 3000; // 3秒で完璧になる
+                this.spawnInterval = 2000; // 2秒ごとに新しい焼き鳥
+                this.gameRunning = true;
+                
+                this.grill = document.getElementById('grill');
+                this.customer = document.getElementById('customer');
+                this.speech = document.getElementById('speech');
+                
+                // サウンドマネージャーを初期化
+                this.soundManager = new SoundManager();
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.gameLoop();
+                this.spawnYakitori();
+                
+                // BGMは自動開始しない（ブラウザポリシーのため）
+            }
+
+            setupEventListeners() {
+                let isDragging = false;
+                let startY = 0;
+                let startX = 0;
+                let currentYakitori = null;
+
+                this.grill.addEventListener('mousedown', (e) => this.handleStart(e, e.clientX, e.clientY));
+                this.grill.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.handleStart(e, touch.clientX, touch.clientY);
+                });
+
+                document.addEventListener('mousemove', (e) => this.handleMove(e, e.clientX, e.clientY));
+                document.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.handleMove(e, touch.clientX, touch.clientY);
+                });
+
+                document.addEventListener('mouseup', (e) => this.handleEnd(e));
+                document.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.handleEnd(e);
+                });
+            }
+
+            handleStart(e, clientX, clientY) {
+                const yakitori = e.target.closest('.yakitori');
+                if (yakitori && !yakitori.classList.contains('flying')) {
+                    this.isDragging = true;
+                    this.startY = clientY;
+                    this.startX = clientX;
+                    this.currentYakitori = yakitori;
+                    yakitori.classList.add('dragging');
+                }
+            }
+
+            handleMove(e, clientX, clientY) {
+                if (this.isDragging && this.currentYakitori) {
+                    const deltaY = this.startY - clientY;
+                    const deltaX = clientX - this.startX;
+                    
+                    if (deltaY > 0) {
+                        this.currentYakitori.style.transform = `translateY(-${deltaY}px) translateX(${deltaX}px)`;
+                    }
+                }
+            }
+
+            handleEnd(e) {
+                if (this.isDragging && this.currentYakitori) {
+                    const deltaY = this.startY - (e.clientY || e.changedTouches[0].clientY);
+                    
+                    if (deltaY > 50) { // フリック判定
+                        this.soundManager.play('flick'); // フリック音を再生
+                        this.serveYakitori(this.currentYakitori);
+                    } else {
+                        // 元の位置に戻す
+                        this.currentYakitori.style.transform = '';
+                    }
+                    
+                    this.currentYakitori.classList.remove('dragging');
+                    this.currentYakitori = null;
+                    this.isDragging = false;
+                }
+            }
+
+            spawnYakitori() {
+                if (!this.gameRunning) return;
+
+                const yakitori = document.createElement('div');
+                yakitori.className = 'yakitori rare';
+                
+                // ランダムな位置に配置
+                const leftPosition = Math.random() * (window.innerWidth - 100);
+                yakitori.style.left = `${leftPosition}px`;
+                
+                yakitori.innerHTML = `
+                    <div class="stick"></div>
+                    <div class="tsukune"></div>
+                    <div class="tsukune"></div>
+                    <div class="tsukune"></div>
+                    <div class="tsukune"></div>
+                    <div class="tsukune"></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                `;
+
+                const yakitoriData = {
+                    element: yakitori,
+                    cookTime: 0,
+                    stage: 'rare'
+                };
+
+                this.yakitoris.push(yakitoriData);
+                this.grill.appendChild(yakitori);
+
+                // 次の焼き鳥をスケジュール
+                setTimeout(() => this.spawnYakitori(), this.spawnInterval);
+            }
+
+            updateYakitoris() {
+                this.yakitoris.forEach((yakitori, index) => {
+                    if (!yakitori.element.classList.contains('flying')) {
+                        yakitori.cookTime += 16; // 60FPSで16ms
+                        
+                        const progress = yakitori.cookTime / this.yakitoriSpeed;
+                        const progressFill = yakitori.element.querySelector('.progress-fill');
+                        progressFill.style.width = `${Math.min(progress * 100, 100)}%`;
+
+                        let newStage;
+                        if (progress < 0.3) {
+                            newStage = 'rare';
+                        } else if (progress < 0.7) {
+                            newStage = 'medium';
+                        } else if (progress < 1.0) {
+                            newStage = 'perfect';
+                        } else {
+                            newStage = 'burnt';
+                        }
+
+                        if (newStage !== yakitori.stage) {
+                            yakitori.element.className = `yakitori ${newStage}`;
+                            yakitori.stage = newStage;
+                        }
+
+                        // 焦げすぎたら自動的に失敗
+                        if (progress > 1.5) {
+                            this.removeYakitori(index);
+                            this.addMiss();
+                        }
+                    }
+                });
+            }
+
+            serveYakitori(yakitoriElement) {
+                const yakitoriData = this.yakitoris.find(y => y.element === yakitoriElement);
+                if (!yakitoriData) return;
+
+                yakitoriElement.classList.add('flying');
+                yakitoriElement.style.transform = 'translateY(-500px)';
+                yakitoriElement.style.opacity = '0';
+
+                const stage = yakitoriData.stage;
+                if (stage === 'perfect') {
+                    this.addScore();
+                    this.showReaction('さんきゅう！', 'good', true);
+                } else {
+                    this.addMiss();
+                    this.showReaction('こらー！', 'bad', false);
+                }
+
+                setTimeout(() => {
+                    const index = this.yakitoris.findIndex(y => y.element === yakitoriElement);
+                    this.removeYakitori(index);
+                }, 800);
+            }
+
+            showReaction(text, type, isHappy) {
+                this.speech.textContent = text;
+                this.speech.className = `speech-bubble ${type}`;
+                this.speech.style.opacity = '1';
+
+                this.customer.className = isHappy ? 'customer happy' : 'customer angry';
+                
+                // 効果音を再生
+                if (isHappy) {
+                    this.soundManager.play('ok');
+                } else {
+                    this.soundManager.play('ng');
+                }
+
+                setTimeout(() => {
+                    this.speech.style.opacity = '0';
+                    this.customer.className = 'customer';
+                }, 1500);
+            }
+
+            addScore() {
+                this.score += 10;
+                document.getElementById('score').textContent = this.score;
+                
+                // スピードアップ
+                if (this.score % 50 === 0) {
+                    this.yakitoriSpeed = Math.max(this.yakitoriSpeed - 200, 1000);
+                    this.spawnInterval = Math.max(this.spawnInterval - 100, 800);
+                }
+            }
+
+            addMiss() {
+                this.misses++;
+                document.getElementById('misses').textContent = this.misses;
+                
+                if (this.misses >= this.maxMisses) {
+                    this.gameOver();
+                }
+            }
+
+            removeYakitori(index) {
+                if (index >= 0 && index < this.yakitoris.length) {
+                    const yakitori = this.yakitoris[index];
+                    if (yakitori.element.parentNode) {
+                        yakitori.element.parentNode.removeChild(yakitori.element);
+                    }
+                    this.yakitoris.splice(index, 1);
+                }
+            }
+
+            gameOver() {
+                this.gameRunning = false;
+                this.soundManager.stopBGM(); // BGMを停止
+                this.soundManager.play('gameover'); // ゲームオーバー音を再生
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+
+            gameLoop() {
+                if (this.gameRunning) {
+                    this.updateYakitoris();
+                    requestAnimationFrame(() => this.gameLoop());
+                }
+            }
+        }
+
+        let game;
+
+        function startGameWithSound() {
+            // スタート音を再生
+            const soundManager = new SoundManager();
+            soundManager.play('start');
+            
+            // スタート画面を非表示
+            document.getElementById('startScreen').style.display = 'none';
+            
+            // ゲーム開始
+            setTimeout(() => {
+                game = new YakitoriGame();
+                // ユーザー操作後なのでBGMを安全に開始
+                game.soundManager.playBGM();
+            }, 500); // スタート音の後にゲーム開始
+        }
+
+        function startGame() {
+            game = new YakitoriGame();
+        }
+
+        function restartGame() {
+            // 前のゲームの音を停止
+            if (game && game.soundManager) {
+                game.soundManager.stopAll();
+            }
+            
+            // ゲームをリセット
+            document.getElementById('score').textContent = '0';
+            document.getElementById('misses').textContent = '0';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('grill').innerHTML = '';
+            
+            // 新しいゲームを開始してBGMを再生
+            game = new YakitoriGame();
+            game.soundManager.playBGM();
+        }
+    </script>
+</body>
+</html>
