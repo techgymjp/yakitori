@@ -25,7 +25,7 @@
 
         .game-title {
             position: absolute;
-            top: 10px;
+            top: 50px;
             left: 50%;
             transform: translateX(-50%);
             color: #ffa500;
@@ -33,7 +33,9 @@
             text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
             font-weight: bold;
             z-index: 100;
-            white-space: nowrap;
+            white-space: pre-line;
+            text-align: center;
+            line-height: 1.2;
         }
 
         .score-board {
@@ -48,7 +50,7 @@
 
         .customer {
             position: absolute;
-            top: 60px;
+            top: 140px;
             left: 50%;
             transform: translateX(-50%);
             font-size: clamp(40px, 12vw, 80px);
@@ -58,7 +60,7 @@
 
         .speech-bubble {
             position: absolute;
-            top: 140px;
+            top: 220px;
             left: 50%;
             transform: translateX(-50%);
             background: white;
@@ -244,6 +246,7 @@
             margin-bottom: 40px;
             text-align: center;
             padding: 0 20px;
+            line-height: 1.2;
         }
 
         .start-btn {
@@ -305,7 +308,7 @@
 </head>
 <body>
     <div class="start-screen" id="startScreen">
-        <div class="start-title">さんきゅうやきとり</div>
+        <div class="start-title">さんきゅう<br>やきとり</div>
         <button class="start-btn" onclick="startGameWithSound()">スタート</button>
     </div>
 
