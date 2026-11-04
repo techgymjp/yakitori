@@ -664,7 +664,7 @@
         </div>
     </div>
 
-    <div class="customer" id="customer">👨‍🍳</div>
+    <div class="customer" id="customer">👨‍💼</div>
     <div class="speech-bubble" id="speech"></div>
 
     <div class="station">
@@ -712,6 +712,20 @@
                         pieces: [['tebasaki',16]] }
         };
         const SKEWER_KEYS = Object.keys(SKEWER_TYPES);
+        // お客さん（串を出すたびに入れ替わる）
+        const CUSTOMERS = [
+            '👨‍💼', '👩‍💼', '👴', '👵', '🧔', '👨‍🦰', '👩‍🦱', '👱‍♀️', '🧑‍🦳',
+            '👷', '👮', '🧑‍🚒', '👨‍🔧', '🧑‍🎓', '🧑‍🎤', '🤵', '👩‍🍳', '🧑‍🌾', '🥷', '🤠'
+        ];
+        function nextCustomer() {
+            const el = document.getElementById('customer');
+            let face;
+            do {
+                face = CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)];
+            } while (face === el.textContent && CUSTOMERS.length > 1);
+            el.textContent = face;
+        }
+
         const PERFECT_FROM = 0.7;   // 当たりの開始（焼き時間に対する割合）
         const BURN_OUT = 1.5;       // ここまで焦げると自動でミス
 
@@ -1129,6 +1143,9 @@
                 this.speech.textContent = text;
                 this.speech.className = `speech-bubble ${type} show`;
 
+                // 毎回ちがうお客さんが受け取る
+                nextCustomer();
+
                 // アニメーションを毎回やり直す
                 this.customer.className = 'customer';
                 void this.customer.offsetWidth;
@@ -1244,6 +1261,7 @@
             document.getElementById('score').textContent = '0';
             document.getElementById('gameOver').classList.add('hidden');
             document.getElementById('grill').innerHTML = '';
+            nextCustomer();
             game = new YakitoriGame(soundManager);
         }
 
