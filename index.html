@@ -2,112 +2,353 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>さんきゅうやきとり</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --ink: #1a120d;
+            --wall: #2a1a12;
+            --wood: #6b4423;
+            --wood-light: #9a6a3c;
+            --wood-dark: #3d2414;
+            --noren: #1d2b4f;
+            --paper: #f6ecd6;
+            --paper-ink: #3a2a1e;
+            --red: #c8322b;
+            --gold: #f5b83d;
+            --ember: #ff6a1a;
+            --good: #2e9e5b;
+            --bad: #d63b2f;
+            --display: 'Dela Gothic One', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            --body: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            --grill-h: clamp(160px, 26vh, 210px);
+            --counter-h: 64px;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: linear-gradient(135deg, #2c1810, #4a2c1a);
-            font-family: 'Arial', sans-serif;
+            font-family: var(--body);
+            color: var(--paper);
             overflow: hidden;
             height: 100vh;
-            position: relative;
+            height: 100dvh;
             width: 100vw;
-            margin: 0;
-            padding: 0;
-            touch-action: none; /* スマホでのスクロールを防ぐ */
+            position: relative;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            background-color: var(--wall);
+            /* 板壁 + 提灯の灯り */
+            background-image:
+                radial-gradient(ellipse 60% 35% at 50% 100%, rgba(255,106,26,0.35), transparent 70%),
+                radial-gradient(circle at 8% 22%, rgba(255,140,60,0.22), transparent 28%),
+                radial-gradient(circle at 92% 22%, rgba(255,140,60,0.22), transparent 28%),
+                repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 64px),
+                linear-gradient(180deg, #24160f 0%, #3a2416 60%, #2a1a12 100%);
         }
 
-        .game-title {
+        /* ===== 暖簾 ===== */
+        .noren {
             position: absolute;
-            top: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #ffa500;
-            font-size: clamp(24px, 8vw, 48px);
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-            font-weight: bold;
-            z-index: 100;
-            white-space: pre-line;
-            text-align: center;
-            line-height: 1.2;
+            top: 0; left: 0; right: 0;
+            height: 64px;
+            background:
+                repeating-linear-gradient(90deg, transparent 0 calc(25% - 2px), var(--wall) calc(25% - 2px) 25%),
+                linear-gradient(180deg, #24355f, var(--noren));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+            z-index: 90;
         }
-
-        .score-board {
+        .noren::before {
+            content: '';
             position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #fff;
-            font-size: clamp(16px, 4vw, 24px);
-            z-index: 100;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(180deg, #5a3a22, #3d2414);
+        }
+        .noren-title {
+            font-family: var(--display);
+            font-size: clamp(22px, 6.5vw, 34px);
+            letter-spacing: 0.12em;
+            color: #fbf6ea;
+            margin-top: 6px;
+            text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+        }
+        .noren-title .accent { color: var(--gold); }
+
+        /* ===== HUD ===== */
+        .hud {
+            position: absolute;
+            top: 72px; left: 10px; right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            z-index: 95;
+        }
+        .tag {
+            background: linear-gradient(180deg, #f3e3c0, #e3cc9c);
+            color: var(--paper-ink);
+            border-radius: 6px;
+            padding: 4px 12px;
+            box-shadow: 0 3px 0 #8a6a3e, 0 6px 12px rgba(0,0,0,0.4);
+            font-weight: 900;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .tag .label { font-size: 12px; opacity: 0.75; }
+        .tag .value {
+            font-family: var(--display);
+            font-size: 22px;
+            min-width: 2.5ch;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .hud-right { display: flex; align-items: center; gap: 8px; }
+        .lives { display: flex; gap: 4px; align-items: center; }
+        .life {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #fff4d6, var(--gold) 60%, #b07a1c);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .life.lost {
+            background: none;
+            box-shadow: none;
+            position: relative;
+            transform: scale(1.05);
+        }
+        .life.lost::before, .life.lost::after {
+            content: '';
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 16px; height: 3px;
+            background: var(--bad);
+            border-radius: 2px;
+        }
+        .life.lost::before { transform: translate(-50%, -50%) rotate(45deg); }
+        .life.lost::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+
+        .icon-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0,0,0,0.35);
+            color: var(--paper);
+            font-size: 18px;
+            cursor: pointer;
+            touch-action: manipulation;
         }
 
+        /* ===== 提灯 ===== */
+        .lantern {
+            position: absolute;
+            top: 64px;
+            width: clamp(40px, 9vw, 56px);
+            z-index: 80;
+            transform-origin: 50% 0;
+            animation: swing 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .lantern.left  { left: 4%; }
+        .lantern.right { right: 4%; animation-delay: -2s; }
+        .lantern .cord { width: 2px; height: 46px; margin: 0 auto; background: #111; }
+        .lantern .body {
+            position: relative;
+            height: clamp(56px, 12vw, 76px);
+            border-radius: 45%;
+            background:
+                repeating-linear-gradient(180deg, transparent 0 7px, rgba(0,0,0,0.12) 7px 8px),
+                radial-gradient(ellipse at 50% 45%, #ff8a5c, var(--red) 60%, #7d1712);
+            box-shadow: 0 0 24px 6px rgba(255,110,60,0.45);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--display);
+            color: #2b0d0a;
+            font-size: clamp(16px, 4vw, 22px);
+        }
+        .lantern .body::before, .lantern .body::after {
+            content: '';
+            position: absolute;
+            left: 18%; right: 18%;
+            height: 6px;
+            background: #1a0f0a;
+            border-radius: 2px;
+        }
+        .lantern .body::before { top: -3px; }
+        .lantern .body::after  { bottom: -3px; }
+        @keyframes swing {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        /* ===== 大将とふきだし ===== */
         .customer {
             position: absolute;
-            top: 140px;
+            top: clamp(110px, 18vh, 150px);
             left: 50%;
             transform: translateX(-50%);
-            font-size: clamp(40px, 12vw, 80px);
+            font-size: clamp(56px, 13vw, 84px);
+            line-height: 1;
             z-index: 50;
-            transition: all 0.3s ease;
+            filter: drop-shadow(0 8px 10px rgba(0,0,0,0.5));
         }
+        .customer::before {
+            content: '';
+            position: absolute;
+            inset: -20%;
+            z-index: -1;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,200,120,0.28), transparent 65%);
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-14px) scale(1.05); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-8deg); }
+            75% { transform: translateX(-50%) rotate(8deg); }
+        }
+        .customer.happy { animation: bounce 0.5s ease-in-out; }
+        .customer.angry { animation: shake 0.4s ease-in-out 2; }
 
         .speech-bubble {
             position: absolute;
-            top: 220px;
+            top: calc(clamp(110px, 18vh, 150px) + clamp(70px, 15vw, 96px));
             left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 10px 20px;
-            border-radius: 15px;
-            font-size: clamp(20px, 6vw, 32px);
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateX(-50%) scale(0.8);
+            background: #fffaf0;
+            color: var(--paper-ink);
+            border: 3px solid var(--ink);
+            padding: 8px 18px;
+            border-radius: 18px;
+            font-size: clamp(16px, 4.8vw, 24px);
+            font-weight: 900;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
             opacity: 0;
-            transition: all 0.5s ease;
+            transition: opacity 0.2s ease, transform 0.2s cubic-bezier(.3,1.6,.5,1);
             z-index: 60;
             white-space: nowrap;
+            pointer-events: none;
         }
-
+        .speech-bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
         .speech-bubble::after {
             content: '';
             position: absolute;
-            bottom: -10px;
+            top: -12px;
             left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 10px solid white;
+            transform: translateX(-50%) rotate(45deg);
+            width: 16px; height: 16px;
+            background: #fffaf0;
+            border-left: 3px solid var(--ink);
+            border-top: 3px solid var(--ink);
         }
+        .speech-bubble.good { color: var(--good); }
+        .speech-bubble.bad  { color: var(--bad); }
 
-        .speech-bubble.good {
-            color: #4caf50;
+        /* ===== 焼き台 ===== */
+        .station {
+            position: absolute;
+            bottom: var(--counter-h);
+            left: 6px; right: 6px;
+            height: var(--grill-h);
+            z-index: 10;
         }
-
-        .speech-bubble.bad {
-            color: #f44336;
-        }
-
         .grill-area {
             position: absolute;
-            bottom: 80px;
-            left: 5px;
-            right: 5px;
-            height: clamp(150px, 25vh, 200px);
-            background: linear-gradient(to top, #ff6b35, #d84315);
-            border-radius: 15px 15px 0 0;
-            box-shadow: 0 -10px 30px rgba(255, 107, 53, 0.5);
-            overflow: hidden;
+            inset: 0;
+            border-radius: 10px 10px 0 0;
+            border: 6px solid #2b2b2e;
+            border-bottom: none;
+            background:
+                linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0.15) 55%, transparent),
+                linear-gradient(180deg, #1c1c1f, #2a1712);
+            box-shadow: 0 -12px 40px rgba(255,106,26,0.35), inset 0 2px 0 rgba(255,255,255,0.08);
+        }
+        /* 炭火 */
+        .grill-area::before {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            height: 46%;
+            background:
+                radial-gradient(ellipse 9% 30% at 6% 92%, #ffd27a, transparent 70%),
+                radial-gradient(ellipse 10% 34% at 19% 88%, #ff8a2a, transparent 70%),
+                radial-gradient(ellipse 8% 28% at 33% 94%, #ffc04d, transparent 70%),
+                radial-gradient(ellipse 11% 36% at 47% 90%, #ff7a1a, transparent 70%),
+                radial-gradient(ellipse 9% 30% at 61% 93%, #ffd27a, transparent 70%),
+                radial-gradient(ellipse 10% 32% at 75% 89%, #ff8a2a, transparent 70%),
+                radial-gradient(ellipse 9% 30% at 90% 92%, #ffc04d, transparent 70%),
+                linear-gradient(0deg, rgba(255,90,20,0.9), rgba(255,60,10,0.35) 45%, transparent);
+            animation: embers 1.6s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        /* 焼き網 */
+        .grill-area::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0;
+            bottom: 34%;
+            height: 30%;
+            background:
+                linear-gradient(180deg, transparent 0 calc(50% - 2px), #55555c calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px)),
+                linear-gradient(180deg, #6d6d75 0 3px, transparent 3px calc(100% - 3px), #6d6d75 calc(100% - 3px));
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @keyframes embers {
+            from { filter: brightness(0.85) saturate(1); }
+            to   { filter: brightness(1.15) saturate(1.2); }
         }
 
+        .smoke {
+            position: absolute;
+            bottom: 40%;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(220,215,210,0.35), transparent 70%);
+            animation: smoke 4.5s linear infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+        @keyframes smoke {
+            0%   { transform: translateY(0) scale(0.6); opacity: 0; }
+            15%  { opacity: 0.8; }
+            100% { transform: translateY(-220px) translateX(20px) scale(2.4); opacity: 0; }
+        }
+
+        /* ===== カウンター ===== */
+        .counter {
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            height: var(--counter-h);
+            z-index: 20;
+            background:
+                repeating-linear-gradient(178deg, rgba(0,0,0,0.08) 0 3px, transparent 3px 11px),
+                linear-gradient(180deg, var(--wood-light), var(--wood) 30%, var(--wood-dark));
+            border-top: 3px solid #b88552;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            text-align: center;
+            padding: 0 12px;
+        }
+        .instructions {
+            font-size: clamp(11px, 3vw, 14px);
+            font-weight: 700;
+            line-height: 1.5;
+            color: #fbe8c8;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+
+        /* ===== 串 ===== */
         .yakitori {
             position: absolute;
             bottom: 15px;
@@ -115,19 +356,17 @@
             height: clamp(140px, 20vh, 180px);
             cursor: grab;
             transition: transform 0.1s ease;
-            user-select: none;
+            z-index: 1;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.45));
         }
-
-        .yakitori:active {
-            cursor: grabbing;
-        }
-
+        .yakitori:active { cursor: grabbing; }
+        .yakitori.perfect { filter: drop-shadow(0 0 10px rgba(255,214,110,0.95)) drop-shadow(0 4px 4px rgba(0,0,0,0.45)); }
+        .yakitori.burnt   { filter: drop-shadow(0 0 8px rgba(0,0,0,0.9)); }
         .yakitori.dragging {
             z-index: 1000;
             transform: scale(1.1);
-            filter: brightness(1.2);
+            filter: brightness(1.15) drop-shadow(0 12px 10px rgba(0,0,0,0.5));
         }
-
         .yakitori.flying {
             pointer-events: none;
             transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -138,295 +377,575 @@
             bottom: -40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 6px;
-            height: 120px;
-            background: linear-gradient(to top, #d4af37, #b8860b);
-            border-radius: 3px;
+            width: 5px;
+            height: 175px;
+            background: linear-gradient(90deg, #c9a96b, #f1dfb0 45%, #b8935a);
+            border-radius: 3px 3px 1px 1px;
         }
 
-        /* 串の具（共通） */
         .piece {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.3);
-            transition: background 0.3s ease;
+            box-shadow: inset 3px 3px 4px rgba(255,255,255,0.35), inset -3px -4px 6px rgba(0,0,0,0.35);
+            transition: background 0.4s ease;
         }
+        /* 焼き目 */
+        .piece::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            background: repeating-linear-gradient(115deg, transparent 0 7px, rgba(50,20,5,0.45) 7px 9px);
+        }
+        .perfect .piece::after { opacity: 1; }
+        .burnt .piece::after   { opacity: 0.6; }
+
         .p-tsukune  { width: 45px; height: 30px; border-radius: 50%; }
         .p-meat     { width: 42px; height: 24px; border-radius: 10px; }
         .p-negi     { width: 34px; height: 16px; border-radius: 8px; }
         .p-reba     { width: 44px; height: 26px; border-radius: 45% 60% 40% 55%; }
         .p-momo     { width: 46px; height: 28px; border-radius: 9px 14px 8px 12px; }
-        .p-tebasaki { width: 54px; height: 95px; border-radius: 45% 45% 30% 60% / 30% 30% 60% 60%; }
 
-        /* 焼き加減のステージ：つくね */
+        /* つくね */
         .rare .p-tsukune    { background: linear-gradient(135deg, #ffb3ba, #ff7b7b); }
         .medium .p-tsukune  { background: linear-gradient(135deg, #deb887, #cd853f); }
-        .perfect .p-tsukune { background: linear-gradient(135deg, #cd853f, #a0522d); }
-
+        .perfect .p-tsukune { background: linear-gradient(135deg, #cd853f, #8a4220); }
         /* ねぎま：鶏肉 */
         .rare .p-meat    { background: linear-gradient(135deg, #ffd6c9, #f7a99a); }
         .medium .p-meat  { background: linear-gradient(135deg, #f0d2a8, #d9a066); }
-        .perfect .p-meat { background: linear-gradient(135deg, #d9a066, #b5651d); }
+        .perfect .p-meat { background: linear-gradient(135deg, #e0a868, #a85a1a); }
         /* ねぎま：ねぎ */
-        .rare .p-negi    { background: linear-gradient(135deg, #e6f5c9, #9ccc65); }
-        .medium .p-negi  { background: linear-gradient(135deg, #c5e1a5, #7cb342); }
-        .perfect .p-negi { background: linear-gradient(135deg, #aed581, #6b8e23); }
+        .rare .p-negi    { background: linear-gradient(135deg, #f1f8e0, #b5d98a); }
+        .medium .p-negi  { background: linear-gradient(135deg, #d9ecb8, #8fbf55); }
+        .perfect .p-negi { background: linear-gradient(135deg, #c6dc8a, #6b8e23); }
         .burnt .p-negi   { background: linear-gradient(135deg, #4e5b31, #2e3b1f) !important; }
-
         /* レバー */
         .rare .p-reba    { background: linear-gradient(135deg, #c2404f, #7a1f2b); }
         .medium .p-reba  { background: linear-gradient(135deg, #9a4a40, #6d2a2a); }
         .perfect .p-reba { background: linear-gradient(135deg, #7a4430, #4a2518); }
-
-        /* 手羽先 */
-        .rare .p-tebasaki    { background: linear-gradient(135deg, #ffe0cc, #f5b7a0); }
-        .medium .p-tebasaki  { background: linear-gradient(135deg, #f2c98a, #d99a4e); }
-        .perfect .p-tebasaki { background: linear-gradient(135deg, #f0b44c, #a8621a); }
-
         /* もも */
         .rare .p-momo    { background: linear-gradient(135deg, #ffc9c0, #f49b8e); }
         .medium .p-momo  { background: linear-gradient(135deg, #f3d3a3, #d8a160); }
         .perfect .p-momo { background: linear-gradient(135deg, #d4914a, #9c5a25); }
-
         /* 焦げ（共通） */
-        .burnt .piece { background: linear-gradient(135deg, #5d4037, #3e2723); }
+        .burnt .piece { background: linear-gradient(135deg, #5d4037, #2b1d18); }
+
+        /* 手羽先（SVG） */
+        .p-tebasaki {
+            width: 58px;
+            height: 112px;
+            background: none !important;
+            box-shadow: none;
+            overflow: visible;
+        }
+        .p-tebasaki::after { display: none; }
+        .p-tebasaki svg { width: 100%; height: 100%; overflow: visible; }
+        .tb-skin { transition: fill 0.4s ease; stroke: rgba(0,0,0,0.25); stroke-width: 1; }
+        .tb-crease { fill: none; stroke: rgba(60,25,10,0.35); stroke-width: 2; stroke-linecap: round; }
+        .tb-shine { fill: rgba(255,255,255,0.35); }
+        .tb-marks { opacity: 0; transition: opacity 0.4s ease; stroke: rgba(50,20,5,0.5); stroke-width: 2.5; stroke-linecap: round; }
+        .rare .tb-skin    { fill: #f8cdb8; }
+        .medium .tb-skin  { fill: #eebd7e; }
+        .perfect .tb-skin { fill: #d98b2e; }
+        .burnt .tb-skin   { fill: #4a2f22; }
+        .perfect .tb-marks { opacity: 1; }
+        .burnt .tb-marks   { opacity: 0.5; }
+        .burnt .tb-shine   { fill: rgba(255,255,255,0.08); }
 
         .yakitori-label {
             position: absolute;
-            bottom: 0;
+            top: -19px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.65);
-            color: #fff;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 1px 6px;
-            border-radius: 8px;
+            background: var(--paper);
+            color: var(--paper-ink);
+            font-size: 11px;
+            font-weight: 900;
+            padding: 1px 7px;
+            border-radius: 4px;
+            box-shadow: 0 2px 0 #8a6a3e;
             white-space: nowrap;
             pointer-events: none;
         }
 
-        .instructions {
+        /* 焼き加減メーター（金色の帯が当たりゾーン） */
+        .progress-bar {
             position: absolute;
-            bottom: 10px;
+            top: 2px;
             left: 50%;
             transform: translateX(-50%);
-            color: #ffa500;
-            font-size: clamp(12px, 3vw, 18px);
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            padding: 0 10px;
-            line-height: 1.3;
+            width: 60px;
+            height: 9px;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 5px;
+            overflow: hidden;
         }
-
-        .game-over {
+        .progress-bar::after {
+            content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 30px 20px;
-            border-radius: 20px;
-            text-align: center;
-            font-size: clamp(18px, 4vw, 24px);
-            display: none;
-            z-index: 200;
-            max-width: 90vw;
-            box-sizing: border-box;
+            left: 70%; width: 30%;
+            top: 0; bottom: 0;
+            border-left: 1px solid #fff3c4;
+            border-right: 1px solid #fff3c4;
+            background: rgba(255,214,110,0.35);
         }
-
-        .restart-btn {
-            background: #ffa500;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: clamp(16px, 4vw, 20px);
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background 0.3s ease;
-            touch-action: manipulation; /* タッチ操作の最適化 */
-        }
-
-        .restart-btn:hover {
-            background: #ff8c00;
-        }
-
-        .start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+        .progress-fill {
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            width: 0%;
+            background: #8bc34a;
+        }
+        .medium .progress-fill  { background: #ffb74d; }
+        .perfect .progress-fill { background: var(--gold); }
+        .burnt .progress-fill   { background: var(--bad); }
+
+        /* 得点ポップ */
+        .score-pop {
+            position: fixed;
+            z-index: 150;
+            font-family: var(--display);
+            font-size: 28px;
+            color: var(--gold);
+            text-shadow: 0 2px 0 #7a3d00, 0 0 12px rgba(255,200,80,0.8);
+            pointer-events: none;
+            transform: translate(-50%, 0);
+            animation: pop 1s ease-out forwards;
+        }
+        @keyframes pop {
+            0%   { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
+            20%  { opacity: 1; transform: translate(-50%, -10px) scale(1.15); }
+            100% { opacity: 0; transform: translate(-50%, -70px) scale(1); }
+        }
+
+        /* ===== 画面（スタート / ゲームオーバー） ===== */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(14,9,6,0.82);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: 18px;
+            padding: 16px;
             z-index: 300;
         }
+        .overlay.hidden { display: none; }
 
         .start-title {
-            color: #ffa500;
-            font-size: clamp(32px, 12vw, 64px);
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-            font-weight: bold;
-            margin-bottom: 40px;
+            font-family: var(--display);
+            font-size: clamp(36px, 11vw, 64px);
+            line-height: 1.1;
             text-align: center;
-            padding: 0 20px;
-            line-height: 1.2;
+            color: #fbf6ea;
+            text-shadow: 0 4px 0 var(--red), 0 8px 24px rgba(0,0,0,0.6);
         }
+        .start-title .accent { color: var(--gold); }
 
-        .start-btn {
-            background: #ffa500;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: clamp(20px, 6vw, 32px);
-            border-radius: 15px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
-            touch-action: manipulation; /* タッチ操作の最適化 */
+        .menu-card {
+            width: min(340px, 100%);
+            background:
+                repeating-linear-gradient(0deg, transparent 0 27px, rgba(58,42,30,0.06) 27px 28px),
+                var(--paper);
+            color: var(--paper-ink);
+            border-radius: 6px;
+            padding: 14px 16px 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-
-        .start-btn:hover {
-            background: #ff8c00;
-            transform: translateY(-2px);
+        .menu-card h2 {
+            font-weight: 900;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 0.3em;
+            border-bottom: 2px solid var(--paper-ink);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }
-
-        .progress-bar {
-            position: absolute;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
+        .menu-row {
+            display: grid;
+            grid-template-columns: 14px 4em 1fr 6.4em 2.8em;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 4px 0;
+        }
+        .menu-dot { width: 14px; height: 14px; border-radius: 50%; }
+        .menu-time {
             height: 8px;
-            background: rgba(255,255,255,0.3);
             border-radius: 4px;
+            background: rgba(58,42,30,0.12);
             overflow: hidden;
         }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #4caf50, #8bc34a, #ff9800, #f44336);
-            transition: width 0.1s linear;
+        .menu-time span { display: block; height: 100%; background: var(--ember); border-radius: 4px; }
+        .menu-hit { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+        .start-lead {
+            text-align: center;
+            font-weight: 700;
+            font-size: clamp(13px, 3.6vw, 16px);
+            line-height: 1.7;
+            color: #fbe8c8;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
         }
+        .menu-pts { text-align: right; font-weight: 900; font-size: 15px; color: var(--red); }
+        .menu-note { font-size: 11px; text-align: center; margin-top: 8px; opacity: 0.7; }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        .primary-btn {
+            font-family: var(--display);
+            background: linear-gradient(180deg, #e0463c, var(--red));
+            color: #fff;
+            border: none;
+            padding: 12px 40px;
+            font-size: clamp(20px, 5.5vw, 26px);
+            letter-spacing: 0.15em;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #7d1712, 0 10px 20px rgba(0,0,0,0.45);
+            touch-action: manipulation;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
+        .primary-btn:hover { filter: brightness(1.08); }
+        .primary-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #7d1712, 0 4px 10px rgba(0,0,0,0.45); }
 
-        .customer.happy {
-            animation: bounce 0.5s ease-in-out;
+        .receipt {
+            width: min(300px, 100%);
+            background: var(--paper);
+            color: var(--paper-ink);
+            padding: 20px 20px 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            -webkit-mask: radial-gradient(circle 6px at 50% 100%, transparent 98%, #000) 0 0 / 14px 100% repeat-x;
+            mask: radial-gradient(circle 6px at 50% 100%, transparent 98%, #000) 0 0 / 14px 100% repeat-x;
+            padding-bottom: 28px;
         }
+        .receipt h2 { font-weight: 900; font-size: 22px; letter-spacing: 0.2em; }
+        .receipt .sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+        .receipt hr { border: none; border-top: 2px dashed rgba(58,42,30,0.35); margin: 12px 0; }
+        .receipt .big { font-family: var(--display); font-size: 48px; color: var(--red); line-height: 1.1; }
+        .receipt .big small { font-size: 18px; color: var(--paper-ink); margin-left: 4px; }
+        .receipt .rank { font-weight: 900; font-size: 16px; margin-top: 4px; }
 
-        .customer.angry {
-            animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(-50%) rotate(0deg); }
-            25% { transform: translateX(-50%) rotate(-5deg); }
-            75% { transform: translateX(-50%) rotate(5deg); }
+        @media (prefers-reduced-motion: reduce) {
+            .lantern, .smoke, .grill-area::before { animation: none; }
         }
     </style>
 </head>
 <body>
-    <div class="start-screen" id="startScreen">
-        <div class="start-title">さんきゅう<br>やきとり</div>
-        <button class="start-btn" onclick="startGameWithSound()">スタート</button>
+    <!-- スタート画面 -->
+    <div class="overlay" id="startScreen">
+        <div class="start-title">さんきゅう<br><span class="accent">やきとり</span></div>
+        <div class="start-lead">
+            🔥 串をちょうどいい焼き加減で上にフリック！ 🔥<br>
+            焼き時間：レバー（短）→ねぎま→もも→つくね→手羽先（長）
+        </div>
+        <div class="menu-card">
+            <h2>お品書き</h2>
+            <div id="menuList"></div>
+            <div class="menu-note">秒数は「当たり」の時間（メーターが金色の間）。<br>売上50点ごとに焼けるのが速くなります</div>
+        </div>
+        <button class="primary-btn" id="startBtn">開店</button>
     </div>
 
-    <div class="game-title">さんきゅう<br>やきとり</div>
-    
-    <div class="score-board">
-        <div>スコア: <span id="score">0</span></div>
-        <div>ミス: <span id="misses">0</span></div>
+    <div class="noren"><div class="noren-title">さんきゅう<span class="accent">やきとり</span></div></div>
+
+    <div class="lantern left"><div class="cord"></div><div class="body">焼</div></div>
+    <div class="lantern right"><div class="cord"></div><div class="body">鳥</div></div>
+
+    <div class="hud">
+        <div class="tag"><span class="label">売上</span><span class="value" id="score">0</span></div>
+        <div class="hud-right">
+            <div class="lives" id="lives" aria-label="のこりミス"></div>
+            <button class="icon-btn" id="muteBtn" aria-label="音のオン・オフ">🔊</button>
+        </div>
     </div>
 
     <div class="customer" id="customer">👨‍🍳</div>
     <div class="speech-bubble" id="speech"></div>
 
-    <div class="grill-area" id="grill"></div>
-
-    <div class="instructions">
-        🔥 串をちょうどいい焼き加減で上にフリック！ 🔥<br>
-        焼き時間：レバー（短）→ねぎま→もも→つくね→手羽先（長）
+    <div class="station">
+        <div class="grill-area" id="grill"></div>
+        <div class="smoke" style="left:12%; animation-delay:0s"></div>
+        <div class="smoke" style="left:38%; animation-delay:-1.5s"></div>
+        <div class="smoke" style="left:62%; animation-delay:-3s"></div>
+        <div class="smoke" style="left:84%; animation-delay:-0.8s"></div>
     </div>
 
-    <div class="game-over" id="gameOver">
-        <h2>ゲームオーバー！</h2>
-        <p>最終スコア: <span id="finalScore">0</span></p>
-        <button class="restart-btn" id="restartBtn">もう一度プレイ</button>
+    <div class="counter">
+        <div class="instructions">
+            メーターが<b style="color:var(--gold)">金色</b>のうちに上へフリック！<br>
+            黒くなったら焦げ。ミス5回で閉店です
+        </div>
+    </div>
+
+    <!-- ゲームオーバー -->
+    <div class="overlay hidden" id="gameOver">
+        <div class="receipt">
+            <h2>本日の売上</h2>
+            <div class="sub">さんきゅうやきとり</div>
+            <hr>
+            <div class="big"><span id="finalScore">0</span><small>点</small></div>
+            <div class="rank" id="rank"></div>
+            <hr>
+            <div class="sub">またのご来店をお待ちしております</div>
+        </div>
+        <button class="primary-btn" id="restartBtn">もう一度</button>
     </div>
 
     <script>
-        // 音声ファイルの管理
+        // ===== 串の種類 =====
+        // cookTime = 完璧になるまでの時間(ms)。焼き時間の70〜100%が「当たり」
+        const SKEWER_TYPES = {
+            reba:     { name: 'レバー', cookTime: 2000, points: 15, color: '#7a4430',
+                        pieces: [['reba',18],['reba',48],['reba',78],['reba',108]] },
+            negima:   { name: 'ねぎま', cookTime: 3000, points: 10, color: '#8fbf55',
+                        pieces: [['meat',18],['negi',46],['meat',66],['negi',94],['meat',114]] },
+            momo:     { name: 'もも',   cookTime: 3500, points: 10, color: '#d4914a',
+                        pieces: [['momo',18],['momo',50],['momo',82],['momo',114]] },
+            tsukune:  { name: 'つくね', cookTime: 4000, points: 15, color: '#a0522d',
+                        pieces: [['tsukune',20],['tsukune',45],['tsukune',70],['tsukune',95],['tsukune',120]] },
+            tebasaki: { name: '手羽先', cookTime: 5000, points: 20, color: '#d98b2e',
+                        pieces: [['tebasaki',16]] }
+        };
+        const SKEWER_KEYS = Object.keys(SKEWER_TYPES);
+        const PERFECT_FROM = 0.7;   // 当たりの開始（焼き時間に対する割合）
+        const BURN_OUT = 1.5;       // ここまで焦げると自動でミス
+
+        // 手羽先：関節でくの字に曲がった手羽の形
+        const TEBASAKI_SVG = `
+            <svg viewBox="0 0 58 112" aria-hidden="true">
+                <path class="tb-skin" d="M14 6 C 26 0, 46 2, 52 14 C 57 25, 52 40, 44 50
+                    C 40 55, 41 60, 44 66 C 48 75, 47 88, 40 99 C 35 107, 27 110, 22 105
+                    C 18 100, 22 92, 23 84 C 24 76, 20 70, 15 64 C 7 54, 3 38, 4 24 C 5 14, 8 8, 14 6 Z"/>
+                <path class="tb-crease" d="M17 60 C 26 56, 36 55, 44 58"/>
+                <path class="tb-crease" d="M24 96 C 29 98, 34 98, 38 95"/>
+                <ellipse class="tb-shine" cx="20" cy="22" rx="6" ry="11" transform="rotate(-15 20 22)"/>
+                <ellipse class="tb-shine" cx="30" cy="78" rx="3.5" ry="8"/>
+                <g class="tb-marks">
+                    <line x1="10" y1="30" x2="46" y2="20"/>
+                    <line x1="10" y1="44" x2="48" y2="34"/>
+                    <line x1="24" y1="76" x2="44" y2="70"/>
+                    <line x1="24" y1="88" x2="42" y2="83"/>
+                </g>
+            </svg>`;
+
+        // ===== お祭り囃子BGM（Web Audioで生成） =====
+        class FestivalBGM {
+            constructor() {
+                this.ctx = null;
+                this.master = null;
+                this.timer = null;
+                this.step = 0;
+                this.nextTime = 0;
+                this.baseBpm = 128;
+                this.tempo = 1;
+                // 陽音階（D E G A B）のメロディ。8分音符×8×4小節、nullは休符
+                this.melody = [
+                    74, 76, 74, 71, 69, null, 71, null,
+                    69, 71, 69, 67, 64, null, 67, null,
+                    67, 69, 71, 74, 76, 74, 71, 69,
+                    67, 64, 67, 69, 62, null, null, null
+                ];
+                this.bassRoots = [50, 45, 43, 50];
+            }
+
+            ensureContext() {
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (!AC) return false;
+                    this.ctx = new AC();
+                    this.master = this.ctx.createGain();
+                    this.master.gain.value = 0.22;
+                    this.master.connect(this.ctx.destination);
+                }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                return true;
+            }
+
+            start() {
+                if (!this.ensureContext()) return;
+                this.stop();
+                this.step = 0;
+                this.tempo = 1;
+                this.nextTime = this.ctx.currentTime + 0.1;
+                this.timer = setInterval(() => this.schedule(), 25);
+            }
+
+            stop() {
+                if (this.timer) clearInterval(this.timer);
+                this.timer = null;
+            }
+
+            setMuted(muted) {
+                if (this.master) this.master.gain.value = muted ? 0 : 0.22;
+            }
+
+            setTempo(mult) { this.tempo = mult; }
+
+            schedule() {
+                const sixteenth = 60 / (this.baseBpm * this.tempo) / 4;
+                while (this.nextTime < this.ctx.currentTime + 0.12) {
+                    this.playStep(this.step % 64, this.nextTime);
+                    this.nextTime += sixteenth;
+                    this.step++;
+                }
+            }
+
+            playStep(s, t) {
+                const bar = Math.floor(s / 16);
+                const inBar = s % 16;
+
+                // 笛（メロディ）
+                if (s % 2 === 0) {
+                    const note = this.melody[s / 2];
+                    if (note) this.flute(note, t, 60 / (this.baseBpm * this.tempo) * 0.48);
+                }
+                // 三味線風ベース
+                const root = this.bassRoots[bar];
+                if (inBar === 0)  this.pluck(root, t);
+                if (inBar === 6)  this.pluck(root + 7, t);
+                if (inBar === 8)  this.pluck(root + 12, t);
+                if (inBar === 12) this.pluck(root + 7, t);
+                // 太鼓
+                if (inBar === 0 || inBar === 8) this.taiko(t, 1);
+                if (bar === 3 && (inBar === 10 || inBar === 12 || inBar === 14)) this.taiko(t, 0.7);
+                if (bar !== 3 && inBar === 14) this.taiko(t, 0.4);
+                // 鉦（チャンチキ）
+                if (inBar % 4 === 2) this.kane(t, 0.5);
+                if (inBar === 4 || inBar === 12) this.kane(t, 0.25);
+            }
+
+            freq(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+
+            flute(midi, t, dur) {
+                const ctx = this.ctx;
+                const osc = ctx.createOscillator();
+                const vib = ctx.createOscillator();
+                const vibGain = ctx.createGain();
+                const g = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = this.freq(midi);
+                vib.frequency.value = 5.5;
+                vibGain.gain.value = this.freq(midi) * 0.012;
+                vib.connect(vibGain).connect(osc.frequency);
+                g.gain.setValueAtTime(0, t);
+                g.gain.linearRampToValueAtTime(0.32, t + 0.03);
+                g.gain.setValueAtTime(0.28, t + dur * 0.7);
+                g.gain.linearRampToValueAtTime(0, t + dur);
+                osc.connect(g).connect(this.master);
+                osc.start(t); vib.start(t);
+                osc.stop(t + dur + 0.02); vib.stop(t + dur + 0.02);
+            }
+
+            pluck(midi, t) {
+                const ctx = this.ctx;
+                const osc = ctx.createOscillator();
+                const filter = ctx.createBiquadFilter();
+                const g = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.value = this.freq(midi);
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(2400, t);
+                filter.frequency.exponentialRampToValueAtTime(300, t + 0.25);
+                g.gain.setValueAtTime(0.22, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+                osc.connect(filter).connect(g).connect(this.master);
+                osc.start(t); osc.stop(t + 0.32);
+            }
+
+            taiko(t, vol) {
+                const ctx = this.ctx;
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(140, t);
+                osc.frequency.exponentialRampToValueAtTime(48, t + 0.25);
+                g.gain.setValueAtTime(0.9 * vol, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+                osc.connect(g).connect(this.master);
+                osc.start(t); osc.stop(t + 0.42);
+            }
+
+            kane(t, vol) {
+                const ctx = this.ctx;
+                [2100, 3170].forEach(f => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.value = f;
+                    g.gain.setValueAtTime(0.05 * vol, t);
+                    g.gain.exponentialRampToValueAtTime(0.0005, t + 0.09);
+                    osc.connect(g).connect(this.master);
+                    osc.start(t); osc.stop(t + 0.1);
+                });
+            }
+        }
+
+        // ===== 効果音・環境音 =====
         class SoundManager {
             constructor() {
                 this.sounds = {
-                    bgm: new Audio('yaki.mp3'),
+                    sizzle: new Audio('yaki.mp3'),
                     start: new Audio('start.mp3'),
                     flick: new Audio('omachi.mp3'),
                     ok: new Audio('39.mp3'),
                     ng: new Audio('kora.mp3'),
                     gameover: new Audio('gong.mp3')
                 };
-                
-                // BGMをループ設定
-                this.sounds.bgm.loop = true;
-                this.sounds.bgm.volume = 0.3;
-                
-                // その他の音量調整
-                this.sounds.start.volume = 0.7;
-                this.sounds.flick.volume = 0.5;
-                this.sounds.ok.volume = 0.8;
-                this.sounds.ng.volume = 0.8;
-                this.sounds.gameover.volume = 0.9;
-                
-                // 音声ファイルが見つからない場合のエラーハンドリング
+                this.volumes = { sizzle: 0.25, start: 0.7, flick: 0.5, ok: 0.8, ng: 0.8, gameover: 0.9 };
+                this.sounds.sizzle.loop = true;
+                this.music = new FestivalBGM();
+                this.muted = false;
+                this.applyVolumes();
+
                 Object.keys(this.sounds).forEach(key => {
-                    this.sounds[key].addEventListener('error', (e) => {
-                        console.warn(`音声ファイル ${key}.mp3 が見つかりません`);
+                    this.sounds[key].addEventListener('error', () => {
+                        console.warn(`音声ファイル ${key} が見つかりません`);
                     });
                 });
             }
-            
+
+            applyVolumes() {
+                Object.keys(this.sounds).forEach(k => {
+                    this.sounds[k].volume = this.muted ? 0 : this.volumes[k];
+                });
+                this.music.setMuted(this.muted);
+            }
+
+            setMuted(muted) {
+                this.muted = muted;
+                this.applyVolumes();
+            }
+
             play(soundName) {
+                const s = this.sounds[soundName];
+                if (!s) return;
                 try {
-                    if (this.sounds[soundName]) {
-                        this.sounds[soundName].currentTime = 0;
-                        this.sounds[soundName].play().catch(e => {
-                            console.warn(`音声再生エラー: ${soundName}`, e);
-                        });
-                    }
+                    s.currentTime = 0;
+                    s.play().catch(e => console.warn(`音声再生エラー: ${soundName}`, e));
                 } catch (e) {
                     console.warn(`音声再生エラー: ${soundName}`, e);
                 }
             }
-            
+
+            // ユーザー操作の中で呼ぶこと（ブラウザの自動再生制限のため）
             playBGM() {
-                try {
-                    this.sounds.bgm.currentTime = 0;
-                    return this.sounds.bgm.play().catch(e => {
-                        console.warn('BGM再生エラー:', e);
-                    });
-                } catch (e) {
-                    console.warn('BGM再生エラー:', e);
-                }
+                this.music.start();
+                this.play('sizzle');
             }
-            
+
             stopBGM() {
-                this.sounds.bgm.pause();
-                this.sounds.bgm.currentTime = 0;
+                this.music.stop();
+                this.sounds.sizzle.pause();
+                this.sounds.sizzle.currentTime = 0;
             }
-            
+
             stopAll() {
+                this.music.stop();
                 Object.values(this.sounds).forEach(sound => {
                     sound.pause();
                     sound.currentTime = 0;
@@ -434,78 +953,30 @@
             }
         }
 
-        // 串の種類：cookTime = 完璧になるまでの時間(ms)、points = 得点
-        const SKEWER_TYPES = {
-            reba:     { name: 'レバー', cookTime: 2000, points: 15,
-                        pieces: [['reba',18],['reba',48],['reba',78],['reba',108]] },
-            negima:   { name: 'ねぎま', cookTime: 3000, points: 10,
-                        pieces: [['meat',18],['negi',46],['meat',66],['negi',94],['meat',114]] },
-            momo:     { name: 'もも',   cookTime: 3500, points: 10,
-                        pieces: [['momo',18],['momo',50],['momo',82],['momo',114]] },
-            tsukune:  { name: 'つくね', cookTime: 4000, points: 15,
-                        pieces: [['tsukune',20],['tsukune',45],['tsukune',70],['tsukune',95],['tsukune',120]] },
-            tebasaki: { name: '手羽先', cookTime: 5000, points: 20,
-                        pieces: [['tebasaki',20]] }
-        };
-        const SKEWER_KEYS = Object.keys(SKEWER_TYPES);
-
+        // ===== ゲーム本体 =====
         class YakitoriGame {
-            constructor() {
+            constructor(soundManager) {
                 this.score = 0;
                 this.misses = 0;
                 this.maxMisses = 5;
                 this.yakitoris = [];
-                this.nextYakitoriTime = 0;
                 this.speedFactor = 1.0; // 焼き時間の倍率（スコアに応じて短くなる）
                 this.spawnInterval = 2000; // 2秒ごとに新しい焼き鳥
                 this.gameRunning = true;
-                
+                this.lastFrame = performance.now();
+
                 this.grill = document.getElementById('grill');
                 this.customer = document.getElementById('customer');
                 this.speech = document.getElementById('speech');
-                
-                // サウンドマネージャーを初期化
-                this.soundManager = new SoundManager();
-                
-                this.init();
-            }
+                this.soundManager = soundManager;
 
-            init() {
-                this.setupEventListeners();
+                renderLives(0, this.maxMisses);
                 this.gameLoop();
                 this.spawnYakitori();
-                
-                // BGMは自動開始しない（ブラウザポリシーのため）
-            }
-
-            setupEventListeners() {
-                let isDragging = false;
-                let startY = 0;
-                let startX = 0;
-                let currentYakitori = null;
-
-                this.grill.addEventListener('mousedown', (e) => this.handleStart(e, e.clientX, e.clientY));
-                this.grill.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    this.handleStart(e, touch.clientX, touch.clientY);
-                });
-
-                document.addEventListener('mousemove', (e) => this.handleMove(e, e.clientX, e.clientY));
-                document.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    this.handleMove(e, touch.clientX, touch.clientY);
-                });
-
-                document.addEventListener('mouseup', (e) => this.handleEnd(e));
-                document.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    this.handleEnd(e);
-                });
             }
 
             handleStart(e, clientX, clientY) {
+                if (!this.gameRunning) return;
                 const yakitori = e.target.closest('.yakitori');
                 if (yakitori && !yakitori.classList.contains('flying')) {
                     this.isDragging = true;
@@ -520,7 +991,6 @@
                 if (this.isDragging && this.currentYakitori) {
                     const deltaY = this.startY - clientY;
                     const deltaX = clientX - this.startX;
-                    
                     if (deltaY > 0) {
                         this.currentYakitori.style.transform = `translateY(-${deltaY}px) translateX(${deltaX}px)`;
                     }
@@ -529,16 +999,16 @@
 
             handleEnd(e) {
                 if (this.isDragging && this.currentYakitori) {
-                    const deltaY = this.startY - (e.clientY || e.changedTouches[0].clientY);
-                    
+                    const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+                    const deltaY = this.startY - endY;
+
                     if (deltaY > 50) { // フリック判定
-                        this.soundManager.play('flick'); // フリック音を再生
+                        this.soundManager.play('flick');
                         this.serveYakitori(this.currentYakitori);
                     } else {
-                        // 元の位置に戻す
                         this.currentYakitori.style.transform = '';
                     }
-                    
+
                     this.currentYakitori.classList.remove('dragging');
                     this.currentYakitori = null;
                     this.isDragging = false;
@@ -552,64 +1022,52 @@
                 const typeKey = SKEWER_KEYS[Math.floor(Math.random() * SKEWER_KEYS.length)];
                 const type = SKEWER_TYPES[typeKey];
                 yakitori.className = `yakitori type-${typeKey} rare`;
-                
-                // スマホ対応：画面幅に応じた位置調整
-                const screenWidth = window.innerWidth;
-                const yakitoriWidth = Math.min(80, screenWidth * 0.12); // 画面幅の12%、最大80px
-                const maxLeft = screenWidth - yakitoriWidth - 20; // 右端から20px余裕
-                const leftPosition = Math.random() * Math.max(maxLeft - 20, 20) + 10; // 左端から10px余裕
-                
+
+                // 画面幅に応じた位置
+                const grillWidth = this.grill.clientWidth;
+                const yakitoriWidth = Math.min(80, window.innerWidth * 0.12);
+                const leftPosition = Math.random() * Math.max(grillWidth - yakitoriWidth - 10, 10) + 5;
                 yakitori.style.left = `${leftPosition}px`;
-                
+
                 const piecesHtml = type.pieces
-                    .map(([kind, top]) => `<div class="piece p-${kind}" style="top:${top}px"></div>`)
+                    .map(([kind, top]) => `<div class="piece p-${kind}" style="top:${top}px">${kind === 'tebasaki' ? TEBASAKI_SVG : ''}</div>`)
                     .join('');
                 yakitori.innerHTML = `
                     <div class="stick"></div>
                     ${piecesHtml}
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
                     <div class="yakitori-label">${type.name}</div>
                 `;
 
-                const yakitoriData = {
+                this.yakitoris.push({
                     element: yakitori,
+                    fill: yakitori.querySelector('.progress-fill'),
                     typeKey: typeKey,
                     cookTime: 0,
                     targetTime: type.cookTime * this.speedFactor,
                     stage: 'rare'
-                };
-
-                this.yakitoris.push(yakitoriData);
+                });
                 this.grill.appendChild(yakitori);
 
-                // 次の焼き鳥をスケジュール
                 setTimeout(() => this.spawnYakitori(), this.spawnInterval);
             }
 
-            updateYakitoris() {
+            updateYakitoris(dt) {
                 // 削除しても添字がずれないよう後ろから処理
                 for (let index = this.yakitoris.length - 1; index >= 0; index--) {
                     const yakitori = this.yakitoris[index];
                     if (yakitori.element.classList.contains('flying')) continue;
 
-                    yakitori.cookTime += 16; // 60FPSで16ms
+                    yakitori.cookTime += dt;
 
                     const progress = yakitori.cookTime / yakitori.targetTime;
-                    const progressFill = yakitori.element.querySelector('.progress-fill');
-                    progressFill.style.width = `${Math.min(progress * 100, 100)}%`;
+                    yakitori.fill.style.width = `${Math.min(progress * 100, 100)}%`;
 
                     let newStage;
-                    if (progress < 0.3) {
-                        newStage = 'rare';
-                    } else if (progress < 0.7) {
-                        newStage = 'medium';
-                    } else if (progress < 1.0) {
-                        newStage = 'perfect';
-                    } else {
-                        newStage = 'burnt';
-                    }
+                    if (progress < 0.3) newStage = 'rare';
+                    else if (progress < PERFECT_FROM) newStage = 'medium';
+                    else if (progress < 1.0) newStage = 'perfect';
+                    else newStage = 'burnt';
 
                     if (newStage !== yakitori.stage) {
                         yakitori.element.classList.remove(yakitori.stage);
@@ -618,9 +1076,14 @@
                     }
 
                     // 焦げすぎたら自動的に失敗
-                    if (progress > 1.5) {
+                    if (progress > BURN_OUT) {
+                        if (yakitori.element === this.currentYakitori) {
+                            this.currentYakitori = null;
+                            this.isDragging = false;
+                        }
                         this.removeYakitori(index);
                         this.addMiss();
+                        if (!this.gameRunning) return;
                     }
                 }
             }
@@ -629,6 +1092,7 @@
                 const yakitoriData = this.yakitoris.find(y => y.element === yakitoriElement);
                 if (!yakitoriData) return;
 
+                const rect = yakitoriElement.getBoundingClientRect();
                 yakitoriElement.classList.add('flying');
                 yakitoriElement.style.transform = 'translateY(-500px)';
                 yakitoriElement.style.opacity = '0';
@@ -637,6 +1101,7 @@
                 const type = SKEWER_TYPES[yakitoriData.typeKey];
                 if (stage === 'perfect') {
                     this.addScore(type.points);
+                    this.showScorePop(`+${type.points}`, rect);
                     this.showReaction(`さんきゅう！ ${type.name} +${type.points}`, 'good', true);
                 } else {
                     this.addMiss();
@@ -650,22 +1115,30 @@
                 }, 800);
             }
 
+            showScorePop(text, rect) {
+                const pop = document.createElement('div');
+                pop.className = 'score-pop';
+                pop.textContent = text;
+                pop.style.left = `${rect.left + rect.width / 2}px`;
+                pop.style.top = `${rect.top}px`;
+                document.body.appendChild(pop);
+                setTimeout(() => pop.remove(), 1000);
+            }
+
             showReaction(text, type, isHappy) {
                 this.speech.textContent = text;
-                this.speech.className = `speech-bubble ${type}`;
-                this.speech.style.opacity = '1';
+                this.speech.className = `speech-bubble ${type} show`;
 
+                // アニメーションを毎回やり直す
+                this.customer.className = 'customer';
+                void this.customer.offsetWidth;
                 this.customer.className = isHappy ? 'customer happy' : 'customer angry';
-                
-                // 効果音を再生
-                if (isHappy) {
-                    this.soundManager.play('ok');
-                } else {
-                    this.soundManager.play('ng');
-                }
 
-                setTimeout(() => {
-                    this.speech.style.opacity = '0';
+                this.soundManager.play(isHappy ? 'ok' : 'ng');
+
+                clearTimeout(this.reactionTimer);
+                this.reactionTimer = setTimeout(() => {
+                    this.speech.classList.remove('show');
                     this.customer.className = 'customer';
                 }, 1500);
             }
@@ -674,98 +1147,161 @@
                 const prevLevel = Math.floor(this.score / 50);
                 this.score += points;
                 document.getElementById('score').textContent = this.score;
-                
+
                 // 50点ごとにスピードアップ
-                if (Math.floor(this.score / 50) > prevLevel) {
+                const level = Math.floor(this.score / 50);
+                if (level > prevLevel) {
                     this.speedFactor = Math.max(this.speedFactor - 0.07, 0.4);
                     this.spawnInterval = Math.max(this.spawnInterval - 100, 800);
+                    this.soundManager.music.setTempo(Math.min(1 + level * 0.04, 1.4));
                 }
             }
 
             addMiss() {
+                if (!this.gameRunning) return;
                 this.misses++;
-                document.getElementById('misses').textContent = this.misses;
-                
-                if (this.misses >= this.maxMisses) {
-                    this.gameOver();
-                }
+                renderLives(this.misses, this.maxMisses);
+                if (this.misses >= this.maxMisses) this.gameOver();
             }
 
             removeYakitori(index) {
                 if (index >= 0 && index < this.yakitoris.length) {
-                    const yakitori = this.yakitoris[index];
-                    if (yakitori.element.parentNode) {
-                        yakitori.element.parentNode.removeChild(yakitori.element);
-                    }
+                    this.yakitoris[index].element.remove();
                     this.yakitoris.splice(index, 1);
                 }
             }
 
             gameOver() {
                 this.gameRunning = false;
-                this.soundManager.stopBGM(); // BGMを停止
-                this.soundManager.play('gameover'); // ゲームオーバー音を再生
+                this.soundManager.stopBGM();
+                this.soundManager.play('gameover');
                 document.getElementById('finalScore').textContent = this.score;
-                document.getElementById('gameOver').style.display = 'block';
+                document.getElementById('rank').textContent = rankFor(this.score);
+                document.getElementById('gameOver').classList.remove('hidden');
             }
 
             gameLoop() {
-                if (this.gameRunning) {
-                    this.updateYakitoris();
-                    requestAnimationFrame(() => this.gameLoop());
-                }
+                if (!this.gameRunning) return;
+                const now = performance.now();
+                // 実時間で焼く（120Hz画面でも同じ速さ。タブ復帰時の大きな飛びは抑える）
+                const dt = Math.min(now - this.lastFrame, 100);
+                this.lastFrame = now;
+                this.updateYakitoris(dt);
+                requestAnimationFrame(() => this.gameLoop());
             }
         }
 
-        let game;
-
-        function startGameWithSound() {
-            // スタート音を再生
-            const soundManager = new SoundManager();
-            soundManager.play('start');
-            
-            // スタート画面を非表示
-            document.getElementById('startScreen').style.display = 'none';
-            
-            // ゲーム開始
-            setTimeout(() => {
-                game = new YakitoriGame();
-                // ユーザー操作後なのでBGMを安全に開始
-                game.soundManager.playBGM();
-            }, 500); // スタート音の後にゲーム開始
+        // ===== 画面まわり =====
+        function rankFor(score) {
+            if (score >= 300) return '🏆 伝説の焼き師';
+            if (score >= 200) return '🔥 名人';
+            if (score >= 100) return '🍢 一人前';
+            if (score >= 50)  return '🙂 見習い';
+            return '🔰 まだまだこれから';
         }
 
-        function startGame() {
-            game = new YakitoriGame();
+        function renderLives(misses, max) {
+            const el = document.getElementById('lives');
+            el.innerHTML = '';
+            for (let i = 0; i < max; i++) {
+                const d = document.createElement('div');
+                d.className = i < misses ? 'life lost' : 'life';
+                el.appendChild(d);
+            }
+        }
+
+        function fmtSec(ms) { return (ms / 1000).toFixed(ms % 1000 === 0 ? 0 : (ms % 100 === 0 ? 1 : 2)); }
+
+        function renderMenu() {
+            const list = document.getElementById('menuList');
+            const maxTime = Math.max(...SKEWER_KEYS.map(k => SKEWER_TYPES[k].cookTime));
+            list.innerHTML = SKEWER_KEYS.map(k => {
+                const t = SKEWER_TYPES[k];
+                return `<div class="menu-row">
+                    <span class="menu-dot" style="background:${t.color}"></span>
+                    <span>${t.name}</span>
+                    <span class="menu-time" title="焼き時間 ${t.cookTime / 1000}秒"><span style="width:${t.cookTime / maxTime * 100}%"></span></span>
+                    <span class="menu-hit">${fmtSec(t.cookTime * PERFECT_FROM)}〜${fmtSec(t.cookTime)}秒</span>
+                    <span class="menu-pts">${t.points}点</span>
+                </div>`;
+            }).join('');
+        }
+
+        let game = null;
+        const soundManager = new SoundManager();
+
+        function loadMuted() {
+            try { return localStorage.getItem('yakitori-muted') === '1'; } catch (e) { return false; }
+        }
+        function saveMuted(m) {
+            try { localStorage.setItem('yakitori-muted', m ? '1' : '0'); } catch (e) {}
+        }
+        function applyMuteUI() {
+            document.getElementById('muteBtn').textContent = soundManager.muted ? '🔇' : '🔊';
+        }
+
+        function newGame() {
+            document.getElementById('score').textContent = '0';
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('grill').innerHTML = '';
+            game = new YakitoriGame(soundManager);
+        }
+
+        function startGameWithSound() {
+            // BGMはユーザー操作の中で開始（iPhoneの自動再生制限対策）
+            soundManager.play('start');
+            soundManager.playBGM();
+            document.getElementById('startScreen').classList.add('hidden');
+            setTimeout(newGame, 500);
         }
 
         function restartGame() {
-            // 前のゲームの音を停止
-            if (game && game.soundManager) {
-                game.soundManager.stopAll();
-            }
-            
-            // ゲームをリセット
-            document.getElementById('score').textContent = '0';
-            document.getElementById('misses').textContent = '0';
-            document.getElementById('gameOver').style.display = 'none';
-            document.getElementById('grill').innerHTML = '';
-            
-            // 新しいゲームを開始してBGMを再生
-            game = new YakitoriGame();
-            game.soundManager.playBGM();
+            if (game) game.gameRunning = false;
+            soundManager.stopAll();
+            soundManager.playBGM();
+            newGame();
         }
 
-        // リスタートボタンのイベントリスナーを設定
-        document.addEventListener('DOMContentLoaded', function() {
-            const restartBtn = document.getElementById('restartBtn');
-            if (restartBtn) {
-                restartBtn.addEventListener('click', restartGame);
-                restartBtn.addEventListener('touchend', function(e) {
+        // 入力は1回だけ登録し、現在のゲームに渡す
+        function setupInput() {
+            const grill = document.getElementById('grill');
+            grill.addEventListener('mousedown', (e) => game && game.handleStart(e, e.clientX, e.clientY));
+            grill.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const t = e.touches[0];
+                if (game) game.handleStart(e, t.clientX, t.clientY);
+            }, { passive: false });
+
+            document.addEventListener('mousemove', (e) => game && game.handleMove(e, e.clientX, e.clientY));
+            document.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const t = e.touches[0];
+                if (game) game.handleMove(e, t.clientX, t.clientY);
+            }, { passive: false });
+
+            document.addEventListener('mouseup', (e) => game && game.handleEnd(e));
+            document.addEventListener('touchend', (e) => {
+                if (game && game.isDragging) {
                     e.preventDefault();
-                    restartGame();
-                });
-            }
+                    game.handleEnd(e);
+                }
+            }, { passive: false });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            renderMenu();
+            renderLives(0, 5);
+            setupInput();
+            soundManager.setMuted(loadMuted());
+            applyMuteUI();
+
+            document.getElementById('startBtn').addEventListener('click', startGameWithSound);
+            document.getElementById('restartBtn').addEventListener('click', restartGame);
+            document.getElementById('muteBtn').addEventListener('click', () => {
+                soundManager.setMuted(!soundManager.muted);
+                saveMuted(soundManager.muted);
+                applyMuteUI();
+            });
         });
     </script>
 </body>
