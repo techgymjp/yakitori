@@ -83,6 +83,9 @@
             text-shadow: 0 2px 0 rgba(0,0,0,0.35);
         }
         .noren-title .accent { color: var(--gold); }
+        /* 英語タイトルは長いので小さめに */
+        html[lang="en"] .noren-title { font-size: clamp(17px, 5vw, 30px); letter-spacing: 0.05em; white-space: nowrap; }
+        html[lang="en"] .start-title { font-size: clamp(32px, 10vw, 60px); }
 
         /* ===== HUD ===== */
         .hud {
@@ -870,10 +873,10 @@
                 shareFailed: 'シェアできませんでした'
             },
             en: {
-                docTitle: 'Sankyu Yakitori',
+                docTitle: 'Thank You Yakitori',
                 langSwitch: '日本語',
-                startTitle: 'SANKYU<br><span class="accent">YAKITORI</span>',
-                norenTitle: 'SANKYU <span class="accent">YAKITORI</span>',
+                startTitle: 'THANK YOU<br><span class="accent">YAKITORI</span>',
+                norenTitle: 'THANK YOU <span class="accent">YAKITORI</span>',
                 startLead: '🔥 Flick each skewer up when it’s grilled just right! 🔥<br>Grill time: Liver (short) → Negima → Thigh → Tsukune → Wings (long)',
                 menuTitle: 'MENU',
                 menuNote: 'Times show the sweet spot (while the meter is gold).<br>Flick burnt skewers down to toss them — no miss.<br>Leave them and they turn to charcoal (miss). Every 50 pts it gets faster.',
@@ -883,7 +886,7 @@
                 muteAria: 'Sound on/off',
                 counterNote: 'Flick up while the meter is <b style="color:var(--gold)">gold</b>!<br>Flick burnt skewers <b style="color:#ffb4a8">down</b> to toss them. 5 misses and the shop closes.',
                 receiptTitle: 'TODAY’S SALES',
-                shopName: 'Sankyu Yakitori',
+                shopName: 'Thank You Yakitori',
                 ptsUnit: 'pts',
                 comeAgain: 'Thank you — please come again!',
                 shareBtn: 'Share',
@@ -898,7 +901,7 @@
                 missPop: 'Miss',
                 tossPop: 'Toss!',
                 ranks: ['🔰 Just getting started', '🙂 Apprentice', '🍢 Pro', '🔥 Master', '🏆 Legendary Grill Master'],
-                shareText: (score, rank) => `I made ${score} pts in sales at Sankyu Yakitori! [${rank}]\nFlick the skewers when they’re grilled just right 🍢 #SankyuYakitori`,
+                shareText: (score, rank) => `I made ${score} pts in sales at Thank You Yakitori! [${rank}]\nFlick the skewers when they’re grilled just right 🍢 #ThankYouYakitori`,
                 copied: 'Link copied',
                 shareFailed: 'Could not share'
             }
