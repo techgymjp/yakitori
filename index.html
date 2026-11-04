@@ -487,7 +487,7 @@
         .progress-bar::after {
             content: '';
             position: absolute;
-            left: 70%; width: 30%;
+            left: var(--zone-left, 40%); width: var(--zone-width, 26.7%);
             top: 0; bottom: 0;
             border-left: 1px solid #fff3c4;
             border-right: 1px solid #fff3c4;
@@ -726,7 +726,7 @@
             el.textContent = face;
         }
 
-        const PERFECT_FROM = 0.7;   // 当たりの開始（焼き時間に対する割合）
+        const PERFECT_FROM = 0.6;   // 当たりの開始（焼き時間に対する割合）。1.0を過ぎると焦げ
         const BURN_OUT = 1.5;       // ここまで焦げると自動でミス
 
         // 手羽先：関節でくの字に曲がった手羽の形
@@ -1071,11 +1071,14 @@
                 for (let index = this.yakitoris.length - 1; index >= 0; index--) {
                     const yakitori = this.yakitoris[index];
                     if (yakitori.element.classList.contains('flying')) continue;
+                    // 指でつかんでいる間は網から離れているので焼けない（つかんだ瞬間の焼き加減で判定）
+                    if (yakitori.element === this.currentYakitori) continue;
 
                     yakitori.cookTime += dt;
 
                     const progress = yakitori.cookTime / yakitori.targetTime;
-                    yakitori.fill.style.width = `${Math.min(progress * 100, 100)}%`;
+                    // メーターは自動ミス（BURN_OUT）までを全長にする。金色の帯は途中にある
+                    yakitori.fill.style.width = `${Math.min(progress / BURN_OUT * 100, 100)}%`;
 
                     let newStage;
                     if (progress < 0.3) newStage = 'rare';
@@ -1305,6 +1308,10 @@
                 }
             }, { passive: false });
         }
+
+        // メーターの金色の帯（当たりゾーン）の位置
+        document.documentElement.style.setProperty('--zone-left', `${PERFECT_FROM / BURN_OUT * 100}%`);
+        document.documentElement.style.setProperty('--zone-width', `${(1 - PERFECT_FROM) / BURN_OUT * 100}%`);
 
         document.addEventListener('DOMContentLoaded', function () {
             renderMenu();
