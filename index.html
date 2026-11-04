@@ -514,6 +514,70 @@
             transform: translate(-50%, 0);
             animation: pop 1s ease-out forwards;
         }
+        .score-pop.toss {
+            font-size: 22px;
+            color: #e8e2da;
+            text-shadow: 0 2px 0 #333, 0 0 8px rgba(0,0,0,0.6);
+        }
+        .score-pop.burn {
+            font-size: 22px;
+            color: #ff6b5a;
+            text-shadow: 0 2px 0 #4a0d06, 0 0 10px rgba(0,0,0,0.7);
+        }
+
+        /* 焦げた串：捨てられる合図 */
+        .yakitori.burnt::after {
+            content: '⬇ 捨てる';
+            position: absolute;
+            left: 50%;
+            bottom: 6px;
+            transform: translateX(-50%);
+            background: rgba(20,12,8,0.85);
+            color: #ffb4a8;
+            border: 1px solid #ff6b5a;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 1px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            animation: nudge 0.8s ease-in-out infinite;
+        }
+        .yakitori.dragging::after, .yakitori.flying::after,
+        .yakitori.tossed::after, .yakitori.charred::after { display: none; }
+        @keyframes nudge {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(4px); }
+        }
+
+        /* 捨てる・燃え尽きる */
+        .yakitori.tossed {
+            pointer-events: none;
+            transition: transform 0.6s cubic-bezier(0.55, 0, 0.9, 0.5), opacity 0.6s ease;
+        }
+        .yakitori.charred {
+            pointer-events: none;
+            animation: char 0.6s ease-in forwards;
+        }
+        @keyframes char {
+            0%   { opacity: 1; transform: scale(1); filter: brightness(0.6); }
+            100% { opacity: 0; transform: scale(0.85) translateY(10px); filter: brightness(0) blur(2px); }
+        }
+        .puff {
+            position: fixed;
+            z-index: 140;
+            width: 90px; height: 90px;
+            margin: -45px 0 0 -45px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(60,55,50,0.85), rgba(60,55,50,0) 70%);
+            pointer-events: none;
+            animation: puff 0.9s ease-out forwards;
+        }
+        @keyframes puff {
+            0%   { opacity: 0.9; transform: scale(0.4); }
+            100% { opacity: 0; transform: translateY(-60px) scale(2.2); }
+        }
+
         @keyframes pop {
             0%   { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
             20%  { opacity: 1; transform: translate(-50%, -10px) scale(1.15); }
@@ -646,7 +710,7 @@
         <div class="menu-card">
             <h2>お品書き</h2>
             <div id="menuList"></div>
-            <div class="menu-note">秒数は「当たり」の時間（メーターが金色の間）。<br>売上50点ごとに焼けるのが速くなります</div>
+            <div class="menu-note">秒数は「当たり」の時間（メーターが金色の間）。<br>焦げた串は下へフリックで捨てればミスになりません。<br>放っておくと燃え尽きてミス。売上50点ごとに速くなります</div>
         </div>
         <button class="primary-btn" id="startBtn">開店</button>
     </div>
@@ -678,7 +742,7 @@
     <div class="counter">
         <div class="instructions">
             メーターが<b style="color:var(--gold)">金色</b>のうちに上へフリック！<br>
-            黒くなったら焦げ。ミス5回で閉店です
+            焦げた串は<b style="color:#ffb4a8">下へフリック</b>で捨てられます。ミス5回で閉店
         </div>
     </div>
 
@@ -1007,6 +1071,10 @@
                     const deltaX = clientX - this.startX;
                     if (deltaY > 0) {
                         this.currentYakitori.style.transform = `translateY(-${deltaY}px) translateX(${deltaX}px)`;
+                    } else {
+                        // 下方向は少しだけ動かす（捨てる操作）
+                        const down = Math.min(-deltaY, 60);
+                        this.currentYakitori.style.transform = `translateY(${down}px) translateX(${deltaX}px)`;
                     }
                 }
             }
@@ -1016,9 +1084,12 @@
                     const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
                     const deltaY = this.startY - endY;
 
-                    if (deltaY > 50) { // フリック判定
+                    if (deltaY > 50) { // 上フリック：お客さんに出す
                         this.soundManager.play('flick');
                         this.serveYakitori(this.currentYakitori);
+                    } else if (deltaY < -40 && this.currentYakitori.classList.contains('burnt')) {
+                        // 下フリック：焦げた串を捨てる（ミスにならない）
+                        this.tossYakitori(this.currentYakitori);
                     } else {
                         this.currentYakitori.style.transform = '';
                     }
@@ -1098,8 +1169,7 @@
                             this.currentYakitori = null;
                             this.isDragging = false;
                         }
-                        this.removeYakitori(index);
-                        this.addMiss();
+                        this.burnOut(index);
                         if (!this.gameRunning) return;
                     }
                 }
@@ -1132,9 +1202,47 @@
                 }, 800);
             }
 
-            showScorePop(text, rect) {
+            // 放っておいて燃え尽きた：煙を出して怒られる（ミス）
+            burnOut(index) {
+                const data = this.yakitoris[index];
+                const el = data.element;
+                const type = SKEWER_TYPES[data.typeKey];
+                const rect = el.getBoundingClientRect();
+                this.yakitoris.splice(index, 1);
+
+                el.classList.add('charred');
+                setTimeout(() => el.remove(), 600);
+
+                const puff = document.createElement('div');
+                puff.className = 'puff';
+                puff.style.left = `${rect.left + rect.width / 2}px`;
+                puff.style.top = `${rect.top + rect.height * 0.4}px`;
+                document.body.appendChild(puff);
+                setTimeout(() => puff.remove(), 900);
+
+                this.showScorePop('ミス', rect, 'burn');
+                this.showReaction(`焦がしたな！ ${type.name}が炭に…`, 'bad', false, false);
+                this.addMiss();
+            }
+
+            // 焦げた串を下にフリックして捨てる（ミスにならない）
+            tossYakitori(el) {
+                const index = this.yakitoris.findIndex(y => y.element === el);
+                if (index < 0) return;
+                const rect = el.getBoundingClientRect();
+                this.yakitoris.splice(index, 1);
+
+                el.classList.add('tossed');
+                el.style.transform = 'translateY(260px) rotate(25deg)';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 600);
+
+                this.showScorePop('ポイッ', rect, 'toss');
+            }
+
+            showScorePop(text, rect, variant) {
                 const pop = document.createElement('div');
-                pop.className = 'score-pop';
+                pop.className = variant ? `score-pop ${variant}` : 'score-pop';
                 pop.textContent = text;
                 pop.style.left = `${rect.left + rect.width / 2}px`;
                 pop.style.top = `${rect.top}px`;
@@ -1142,12 +1250,12 @@
                 setTimeout(() => pop.remove(), 1000);
             }
 
-            showReaction(text, type, isHappy) {
+            showReaction(text, type, isHappy, newCustomer = true) {
                 this.speech.textContent = text;
                 this.speech.className = `speech-bubble ${type} show`;
 
-                // 毎回ちがうお客さんが受け取る
-                nextCustomer();
+                // 串を受け取るたびにちがうお客さん（燃え尽きたときは今のお客さんが怒る）
+                if (newCustomer) nextCustomer();
 
                 // アニメーションを毎回やり直す
                 this.customer.className = 'customer';
