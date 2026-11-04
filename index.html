@@ -144,37 +144,67 @@
             border-radius: 3px;
         }
 
-        .tsukune {
+        /* 串の具（共通） */
+        .piece {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            width: 45px;
-            height: 30px;
-            border-radius: 50%;
             box-shadow: inset -3px -3px 6px rgba(0,0,0,0.3);
+            transition: background 0.3s ease;
         }
+        .p-tsukune  { width: 45px; height: 30px; border-radius: 50%; }
+        .p-meat     { width: 42px; height: 24px; border-radius: 10px; }
+        .p-negi     { width: 34px; height: 16px; border-radius: 8px; }
+        .p-reba     { width: 44px; height: 26px; border-radius: 45% 60% 40% 55%; }
+        .p-momo     { width: 46px; height: 28px; border-radius: 9px 14px 8px 12px; }
+        .p-tebasaki { width: 54px; height: 95px; border-radius: 45% 45% 30% 60% / 30% 30% 60% 60%; }
 
-        .tsukune:nth-child(2) { top: 20px; }
-        .tsukune:nth-child(3) { top: 45px; }
-        .tsukune:nth-child(4) { top: 70px; }
-        .tsukune:nth-child(5) { top: 95px; }
-        .tsukune:nth-child(6) { top: 120px; }
+        /* 焼き加減のステージ：つくね */
+        .rare .p-tsukune    { background: linear-gradient(135deg, #ffb3ba, #ff7b7b); }
+        .medium .p-tsukune  { background: linear-gradient(135deg, #deb887, #cd853f); }
+        .perfect .p-tsukune { background: linear-gradient(135deg, #cd853f, #a0522d); }
 
-        /* 焼き加減のステージ */
-        .rare .tsukune {
-            background: linear-gradient(135deg, #ffb3ba, #ff7b7b);
-        }
+        /* ねぎま：鶏肉 */
+        .rare .p-meat    { background: linear-gradient(135deg, #ffd6c9, #f7a99a); }
+        .medium .p-meat  { background: linear-gradient(135deg, #f0d2a8, #d9a066); }
+        .perfect .p-meat { background: linear-gradient(135deg, #d9a066, #b5651d); }
+        /* ねぎま：ねぎ */
+        .rare .p-negi    { background: linear-gradient(135deg, #e6f5c9, #9ccc65); }
+        .medium .p-negi  { background: linear-gradient(135deg, #c5e1a5, #7cb342); }
+        .perfect .p-negi { background: linear-gradient(135deg, #aed581, #6b8e23); }
+        .burnt .p-negi   { background: linear-gradient(135deg, #4e5b31, #2e3b1f) !important; }
 
-        .medium .tsukune {
-            background: linear-gradient(135deg, #deb887, #cd853f);
-        }
+        /* レバー */
+        .rare .p-reba    { background: linear-gradient(135deg, #c2404f, #7a1f2b); }
+        .medium .p-reba  { background: linear-gradient(135deg, #9a4a40, #6d2a2a); }
+        .perfect .p-reba { background: linear-gradient(135deg, #7a4430, #4a2518); }
 
-        .perfect .tsukune {
-            background: linear-gradient(135deg, #cd853f, #a0522d);
-        }
+        /* 手羽先 */
+        .rare .p-tebasaki    { background: linear-gradient(135deg, #ffe0cc, #f5b7a0); }
+        .medium .p-tebasaki  { background: linear-gradient(135deg, #f2c98a, #d99a4e); }
+        .perfect .p-tebasaki { background: linear-gradient(135deg, #f0b44c, #a8621a); }
 
-        .burnt .tsukune {
-            background: linear-gradient(135deg, #5d4037, #3e2723);
+        /* もも */
+        .rare .p-momo    { background: linear-gradient(135deg, #ffc9c0, #f49b8e); }
+        .medium .p-momo  { background: linear-gradient(135deg, #f3d3a3, #d8a160); }
+        .perfect .p-momo { background: linear-gradient(135deg, #d4914a, #9c5a25); }
+
+        /* 焦げ（共通） */
+        .burnt .piece { background: linear-gradient(135deg, #5d4037, #3e2723); }
+
+        .yakitori-label {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+            pointer-events: none;
         }
 
         .instructions {
@@ -325,8 +355,8 @@
     <div class="grill-area" id="grill"></div>
 
     <div class="instructions">
-        🔥 5個入りつくねをちょうどいい焼き加減で上にフリック！ 🔥<br>
-        レア→焼き中→完璧→焦げ
+        🔥 串をちょうどいい焼き加減で上にフリック！ 🔥<br>
+        焼き時間：レバー（短）→ねぎま→もも→つくね→手羽先（長）
     </div>
 
     <div class="game-over" id="gameOver">
@@ -404,6 +434,21 @@
             }
         }
 
+        // 串の種類：cookTime = 完璧になるまでの時間(ms)、points = 得点
+        const SKEWER_TYPES = {
+            reba:     { name: 'レバー', cookTime: 2000, points: 15,
+                        pieces: [['reba',18],['reba',48],['reba',78],['reba',108]] },
+            negima:   { name: 'ねぎま', cookTime: 3000, points: 10,
+                        pieces: [['meat',18],['negi',46],['meat',66],['negi',94],['meat',114]] },
+            momo:     { name: 'もも',   cookTime: 3500, points: 10,
+                        pieces: [['momo',18],['momo',50],['momo',82],['momo',114]] },
+            tsukune:  { name: 'つくね', cookTime: 4000, points: 15,
+                        pieces: [['tsukune',20],['tsukune',45],['tsukune',70],['tsukune',95],['tsukune',120]] },
+            tebasaki: { name: '手羽先', cookTime: 5000, points: 20,
+                        pieces: [['tebasaki',20]] }
+        };
+        const SKEWER_KEYS = Object.keys(SKEWER_TYPES);
+
         class YakitoriGame {
             constructor() {
                 this.score = 0;
@@ -411,7 +456,7 @@
                 this.maxMisses = 5;
                 this.yakitoris = [];
                 this.nextYakitoriTime = 0;
-                this.yakitoriSpeed = 3000; // 3秒で完璧になる
+                this.speedFactor = 1.0; // 焼き時間の倍率（スコアに応じて短くなる）
                 this.spawnInterval = 2000; // 2秒ごとに新しい焼き鳥
                 this.gameRunning = true;
                 
@@ -504,7 +549,9 @@
                 if (!this.gameRunning) return;
 
                 const yakitori = document.createElement('div');
-                yakitori.className = 'yakitori rare';
+                const typeKey = SKEWER_KEYS[Math.floor(Math.random() * SKEWER_KEYS.length)];
+                const type = SKEWER_TYPES[typeKey];
+                yakitori.className = `yakitori type-${typeKey} rare`;
                 
                 // スマホ対応：画面幅に応じた位置調整
                 const screenWidth = window.innerWidth;
@@ -514,21 +561,23 @@
                 
                 yakitori.style.left = `${leftPosition}px`;
                 
+                const piecesHtml = type.pieces
+                    .map(([kind, top]) => `<div class="piece p-${kind}" style="top:${top}px"></div>`)
+                    .join('');
                 yakitori.innerHTML = `
                     <div class="stick"></div>
-                    <div class="tsukune"></div>
-                    <div class="tsukune"></div>
-                    <div class="tsukune"></div>
-                    <div class="tsukune"></div>
-                    <div class="tsukune"></div>
+                    ${piecesHtml}
                     <div class="progress-bar">
                         <div class="progress-fill"></div>
                     </div>
+                    <div class="yakitori-label">${type.name}</div>
                 `;
 
                 const yakitoriData = {
                     element: yakitori,
+                    typeKey: typeKey,
                     cookTime: 0,
+                    targetTime: type.cookTime * this.speedFactor,
                     stage: 'rare'
                 };
 
@@ -540,37 +589,40 @@
             }
 
             updateYakitoris() {
-                this.yakitoris.forEach((yakitori, index) => {
-                    if (!yakitori.element.classList.contains('flying')) {
-                        yakitori.cookTime += 16; // 60FPSで16ms
-                        
-                        const progress = yakitori.cookTime / this.yakitoriSpeed;
-                        const progressFill = yakitori.element.querySelector('.progress-fill');
-                        progressFill.style.width = `${Math.min(progress * 100, 100)}%`;
+                // 削除しても添字がずれないよう後ろから処理
+                for (let index = this.yakitoris.length - 1; index >= 0; index--) {
+                    const yakitori = this.yakitoris[index];
+                    if (yakitori.element.classList.contains('flying')) continue;
 
-                        let newStage;
-                        if (progress < 0.3) {
-                            newStage = 'rare';
-                        } else if (progress < 0.7) {
-                            newStage = 'medium';
-                        } else if (progress < 1.0) {
-                            newStage = 'perfect';
-                        } else {
-                            newStage = 'burnt';
-                        }
+                    yakitori.cookTime += 16; // 60FPSで16ms
 
-                        if (newStage !== yakitori.stage) {
-                            yakitori.element.className = `yakitori ${newStage}`;
-                            yakitori.stage = newStage;
-                        }
+                    const progress = yakitori.cookTime / yakitori.targetTime;
+                    const progressFill = yakitori.element.querySelector('.progress-fill');
+                    progressFill.style.width = `${Math.min(progress * 100, 100)}%`;
 
-                        // 焦げすぎたら自動的に失敗
-                        if (progress > 1.5) {
-                            this.removeYakitori(index);
-                            this.addMiss();
-                        }
+                    let newStage;
+                    if (progress < 0.3) {
+                        newStage = 'rare';
+                    } else if (progress < 0.7) {
+                        newStage = 'medium';
+                    } else if (progress < 1.0) {
+                        newStage = 'perfect';
+                    } else {
+                        newStage = 'burnt';
                     }
-                });
+
+                    if (newStage !== yakitori.stage) {
+                        yakitori.element.classList.remove(yakitori.stage);
+                        yakitori.element.classList.add(newStage);
+                        yakitori.stage = newStage;
+                    }
+
+                    // 焦げすぎたら自動的に失敗
+                    if (progress > 1.5) {
+                        this.removeYakitori(index);
+                        this.addMiss();
+                    }
+                }
             }
 
             serveYakitori(yakitoriElement) {
@@ -582,12 +634,14 @@
                 yakitoriElement.style.opacity = '0';
 
                 const stage = yakitoriData.stage;
+                const type = SKEWER_TYPES[yakitoriData.typeKey];
                 if (stage === 'perfect') {
-                    this.addScore();
-                    this.showReaction('さんきゅう！', 'good', true);
+                    this.addScore(type.points);
+                    this.showReaction(`さんきゅう！ ${type.name} +${type.points}`, 'good', true);
                 } else {
                     this.addMiss();
-                    this.showReaction('こらー！', 'bad', false);
+                    const reason = stage === 'burnt' ? '焦げてる！' : '生焼け！';
+                    this.showReaction(`こらー！ ${type.name}${reason}`, 'bad', false);
                 }
 
                 setTimeout(() => {
@@ -616,13 +670,14 @@
                 }, 1500);
             }
 
-            addScore() {
-                this.score += 10;
+            addScore(points) {
+                const prevLevel = Math.floor(this.score / 50);
+                this.score += points;
                 document.getElementById('score').textContent = this.score;
                 
-                // スピードアップ
-                if (this.score % 50 === 0) {
-                    this.yakitoriSpeed = Math.max(this.yakitoriSpeed - 200, 1000);
+                // 50点ごとにスピードアップ
+                if (Math.floor(this.score / 50) > prevLevel) {
+                    this.speedFactor = Math.max(this.speedFactor - 0.07, 0.4);
                     this.spawnInterval = Math.max(this.spawnInterval - 100, 800);
                 }
             }
