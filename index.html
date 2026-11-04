@@ -238,7 +238,9 @@
             opacity: 0;
             transition: opacity 0.2s ease, transform 0.2s cubic-bezier(.3,1.6,.5,1);
             z-index: 60;
-            white-space: nowrap;
+            width: max-content;
+            max-width: calc(100vw - 24px);
+            text-align: center;
             pointer-events: none;
         }
         .speech-bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
@@ -530,7 +532,7 @@
 
         /* 焦げた串：捨てられる合図 */
         .yakitori.burnt::after {
-            content: '⬇ 捨てる';
+            content: var(--toss-label, '⬇ 捨てる');
             position: absolute;
             left: 50%;
             bottom: 6px;
@@ -635,7 +637,7 @@
         }
         .menu-row {
             display: grid;
-            grid-template-columns: 14px 4em 1fr 6.4em 2.8em;
+            grid-template-columns: 14px 4.4em 1fr auto auto;
             align-items: center;
             gap: 8px;
             font-weight: 700;
@@ -697,6 +699,51 @@
         .receipt .big small { font-size: 18px; color: var(--paper-ink); margin-left: 4px; }
         .receipt .rank { font-weight: 900; font-size: 16px; margin-top: 4px; }
 
+        /* 言語切り替え・シェア */
+        .lang-btn {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: rgba(246,236,214,0.12);
+            color: var(--paper);
+            border: 1px solid rgba(246,236,214,0.45);
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-family: var(--body);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .lang-btn:hover { background: rgba(246,236,214,0.22); }
+        .result-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+        }
+        .share-btn {
+            font-family: var(--body);
+            font-weight: 900;
+            background: #111;
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.85);
+            padding: 11px 26px;
+            font-size: clamp(17px, 4.6vw, 20px);
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #000, 0 10px 20px rgba(0,0,0,0.45);
+            touch-action: manipulation;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .share-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #000, 0 4px 10px rgba(0,0,0,0.45); }
+        .share-note {
+            min-height: 1.2em;
+            font-size: 13px;
+            color: #fbe8c8;
+            text-align: center;
+        }
+
         @media (prefers-reduced-motion: reduce) {
             .lantern, .smoke, .grill-area::before { animation: none; }
         }
@@ -705,29 +752,30 @@
 <body>
     <!-- スタート画面 -->
     <div class="overlay" id="startScreen">
-        <div class="start-title">さんきゅう<br><span class="accent">やきとり</span></div>
-        <div class="start-lead">
+        <button class="lang-btn" data-i18n="langSwitch">English</button>
+        <div class="start-title" data-i18n-html="startTitle">さんきゅう<br><span class="accent">やきとり</span></div>
+        <div class="start-lead" data-i18n-html="startLead">
             🔥 串をちょうどいい焼き加減で上にフリック！ 🔥<br>
             焼き時間：レバー（短）→ねぎま→もも→つくね→手羽先（長）
         </div>
         <div class="menu-card">
-            <h2>お品書き</h2>
+            <h2 data-i18n="menuTitle">お品書き</h2>
             <div id="menuList"></div>
-            <div class="menu-note">秒数は「当たり」の時間（メーターが金色の間）。<br>焦げた串は下へフリックで捨てればミスになりません。<br>放っておくと燃え尽きてミス。売上50点ごとに速くなります</div>
+            <div class="menu-note" data-i18n-html="menuNote">秒数は「当たり」の時間（メーターが金色の間）。<br>焦げた串は下へフリックで捨てればミスになりません。<br>放っておくと燃え尽きてミス。売上50点ごとに速くなります</div>
         </div>
-        <button class="primary-btn" id="startBtn">開店</button>
+        <button class="primary-btn" id="startBtn" data-i18n="startBtn">開店</button>
     </div>
 
-    <div class="noren"><div class="noren-title">さんきゅう<span class="accent">やきとり</span></div></div>
+    <div class="noren"><div class="noren-title" data-i18n-html="norenTitle">さんきゅう<span class="accent">やきとり</span></div></div>
 
     <div class="lantern left"><div class="cord"></div><div class="body">焼</div></div>
     <div class="lantern right"><div class="cord"></div><div class="body">鳥</div></div>
 
     <div class="hud">
-        <div class="tag"><span class="label">売上</span><span class="value" id="score">0</span></div>
+        <div class="tag"><span class="label" data-i18n="salesLabel">売上</span><span class="value" id="score">0</span></div>
         <div class="hud-right">
-            <div class="lives" id="lives" aria-label="のこりミス"></div>
-            <button class="icon-btn" id="muteBtn" aria-label="音のオン・オフ">🔊</button>
+            <div class="lives" id="lives" data-i18n-aria="livesAria" aria-label="のこりミス"></div>
+            <button class="icon-btn" id="muteBtn" data-i18n-aria="muteAria" aria-label="音のオン・オフ">🔊</button>
         </div>
     </div>
 
@@ -743,7 +791,7 @@
     </div>
 
     <div class="counter">
-        <div class="instructions">
+        <div class="instructions" data-i18n-html="counterNote">
             メーターが<b style="color:var(--gold)">金色</b>のうちに上へフリック！<br>
             焦げた串は<b style="color:#ffb4a8">下へフリック</b>で捨てられます。ミス5回で閉店
         </div>
@@ -752,33 +800,178 @@
     <!-- ゲームオーバー -->
     <div class="overlay hidden" id="gameOver">
         <div class="receipt">
-            <h2>本日の売上</h2>
-            <div class="sub">さんきゅうやきとり</div>
+            <h2 data-i18n="receiptTitle">本日の売上</h2>
+            <div class="sub" data-i18n="shopName">さんきゅうやきとり</div>
             <hr>
-            <div class="big"><span id="finalScore">0</span><small>点</small></div>
+            <div class="big"><span id="finalScore">0</span><small data-i18n="ptsUnit">点</small></div>
             <div class="rank" id="rank"></div>
             <hr>
-            <div class="sub">またのご来店をお待ちしております</div>
+            <div class="sub" data-i18n="comeAgain">またのご来店をお待ちしております</div>
         </div>
-        <button class="primary-btn" id="restartBtn">もう一度</button>
+        <div class="result-actions">
+            <button class="share-btn" id="shareBtn" data-i18n="shareBtn">結果をシェア</button>
+            <button class="primary-btn" id="restartBtn" data-i18n="restartBtn">もう一度</button>
+        </div>
+        <div class="share-note" id="shareNote" aria-live="polite"></div>
+        <button class="lang-btn" data-i18n="langSwitch">English</button>
     </div>
 
     <script>
         // ===== 串の種類 =====
         // cookTime = 完璧になるまでの時間(ms)。焼き時間の PERFECT_FROM(60%)〜100% が「当たり」
         const SKEWER_TYPES = {
-            reba:     { name: 'レバー', cookTime: 2000, points: 15, color: '#7a4430',
+            reba:     { name: { ja: 'レバー', en: 'Liver' }, cookTime: 2000, points: 15, color: '#7a4430',
                         pieces: [['reba',18],['reba',48],['reba',78],['reba',108]] },
-            negima:   { name: 'ねぎま', cookTime: 3000, points: 10, color: '#8fbf55',
+            negima:   { name: { ja: 'ねぎま', en: 'Negima' }, cookTime: 3000, points: 10, color: '#8fbf55',
                         pieces: [['meat',18],['negi',46],['meat',66],['negi',94],['meat',114]] },
-            momo:     { name: 'もも',   cookTime: 3500, points: 10, color: '#d4914a',
+            momo:     { name: { ja: 'もも', en: 'Thigh' },   cookTime: 3500, points: 10, color: '#d4914a',
                         pieces: [['momo',18],['momo',50],['momo',82],['momo',114]] },
-            tsukune:  { name: 'つくね', cookTime: 4000, points: 15, color: '#a0522d',
+            tsukune:  { name: { ja: 'つくね', en: 'Tsukune' }, cookTime: 4000, points: 15, color: '#a0522d',
                         pieces: [['tsukune',20],['tsukune',45],['tsukune',70],['tsukune',95],['tsukune',120]] },
-            tebasaki: { name: '手羽先', cookTime: 5000, points: 20, color: '#d98b2e',
+            tebasaki: { name: { ja: '手羽先', en: 'Wings' }, cookTime: 5000, points: 20, color: '#d98b2e',
                         pieces: [['tebasaki',16]] }
         };
         const SKEWER_KEYS = Object.keys(SKEWER_TYPES);
+
+        // ===== 日本語 / 英語 =====
+        const SHARE_URL = 'https://techgym.jp/column/claude-code-game-yakitori/';
+        const I18N = {
+            ja: {
+                docTitle: 'さんきゅうやきとり',
+                langSwitch: 'English',
+                startTitle: 'さんきゅう<br><span class="accent">やきとり</span>',
+                norenTitle: 'さんきゅう<span class="accent">やきとり</span>',
+                startLead: '🔥 串をちょうどいい焼き加減で上にフリック！ 🔥<br>焼き時間：レバー（短）→ねぎま→もも→つくね→手羽先（長）',
+                menuTitle: 'お品書き',
+                menuNote: '秒数は「当たり」の時間（メーターが金色の間）。<br>焦げた串は下へフリックで捨てればミスになりません。<br>放っておくと燃え尽きてミス。売上50点ごとに速くなります',
+                startBtn: '開店',
+                salesLabel: '売上',
+                livesAria: 'のこりミス',
+                muteAria: '音のオン・オフ',
+                counterNote: 'メーターが<b style="color:var(--gold)">金色</b>のうちに上へフリック！<br>焦げた串は<b style="color:#ffb4a8">下へフリック</b>で捨てられます。ミス5回で閉店',
+                receiptTitle: '本日の売上',
+                shopName: 'さんきゅうやきとり',
+                ptsUnit: '点',
+                comeAgain: 'またのご来店をお待ちしております',
+                shareBtn: '結果をシェア',
+                restartBtn: 'もう一度',
+                tossLabel: '⬇ 捨てる',
+                sec: (a, b) => `${a}〜${b}秒`,
+                secTitle: (s) => `焼き時間 ${s}秒`,
+                pts: (n) => `${n}点`,
+                good: (name, pts) => `さんきゅう！ ${name} +${pts}`,
+                bad: (name, burnt) => `こらー！ ${name}${burnt ? '焦げてる！' : '生焼け！'}`,
+                burnOut: (name) => `焦がしたな！ ${name}が炭に…`,
+                missPop: 'ミス',
+                tossPop: 'ポイッ',
+                ranks: ['🔰 まだまだこれから', '🙂 見習い', '🍢 一人前', '🔥 名人', '🏆 伝説の焼き師'],
+                shareText: (score, rank) => `さんきゅうやきとりで本日の売上${score}点！【${rank}】\n焼き加減を見極めて串をフリックするゲーム🍢 #さんきゅうやきとり`,
+                copied: 'リンクをコピーしました',
+                shareFailed: 'シェアできませんでした'
+            },
+            en: {
+                docTitle: 'Sankyu Yakitori',
+                langSwitch: '日本語',
+                startTitle: 'SANKYU<br><span class="accent">YAKITORI</span>',
+                norenTitle: 'SANKYU <span class="accent">YAKITORI</span>',
+                startLead: '🔥 Flick each skewer up when it’s grilled just right! 🔥<br>Grill time: Liver (short) → Negima → Thigh → Tsukune → Wings (long)',
+                menuTitle: 'MENU',
+                menuNote: 'Times show the sweet spot (while the meter is gold).<br>Flick burnt skewers down to toss them — no miss.<br>Leave them and they turn to charcoal (miss). Every 50 pts it gets faster.',
+                startBtn: 'OPEN',
+                salesLabel: 'Sales',
+                livesAria: 'Misses left',
+                muteAria: 'Sound on/off',
+                counterNote: 'Flick up while the meter is <b style="color:var(--gold)">gold</b>!<br>Flick burnt skewers <b style="color:#ffb4a8">down</b> to toss them. 5 misses and the shop closes.',
+                receiptTitle: 'TODAY’S SALES',
+                shopName: 'Sankyu Yakitori',
+                ptsUnit: 'pts',
+                comeAgain: 'Thank you — please come again!',
+                shareBtn: 'Share',
+                restartBtn: 'Play again',
+                tossLabel: '⬇ Toss',
+                sec: (a, b) => `${a}–${b}s`,
+                secTitle: (s) => `Grill time ${s}s`,
+                pts: (n) => `${n} pts`,
+                good: (name, pts) => `Thank you! ${name} +${pts}`,
+                bad: (name, burnt) => `Hey! The ${name} is ${burnt ? 'burnt' : 'raw'}!`,
+                burnOut: (name) => `You burned it! The ${name} is charcoal…`,
+                missPop: 'Miss',
+                tossPop: 'Toss!',
+                ranks: ['🔰 Just getting started', '🙂 Apprentice', '🍢 Pro', '🔥 Master', '🏆 Legendary Grill Master'],
+                shareText: (score, rank) => `I made ${score} pts in sales at Sankyu Yakitori! [${rank}]\nFlick the skewers when they’re grilled just right 🍢 #SankyuYakitori`,
+                copied: 'Link copied',
+                shareFailed: 'Could not share'
+            }
+        };
+
+        function detectLang() {
+            try {
+                const q = new URLSearchParams(location.search).get('lang');
+                if (q === 'ja' || q === 'en') return q;
+            } catch (e) {}
+            try {
+                const saved = localStorage.getItem('yakitori-lang');
+                if (saved === 'ja' || saved === 'en') return saved;
+            } catch (e) {}
+            const nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'ja';
+            return nav.toLowerCase().startsWith('ja') ? 'ja' : 'en';
+        }
+        let lang = detectLang();
+        const T = () => I18N[lang];
+        const skewerName = (type) => type.name[lang];
+
+        function applyLang() {
+            const dict = T();
+            document.documentElement.lang = lang;
+            document.title = dict.docTitle;
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = dict[el.dataset.i18n]; });
+            document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = dict[el.dataset.i18nHtml]; });
+            document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', dict[el.dataset.i18nAria]); });
+            document.documentElement.style.setProperty('--toss-label', JSON.stringify(dict.tossLabel));
+            // 網の上の串の名札
+            document.querySelectorAll('.yakitori').forEach(el => {
+                const key = el.dataset.type;
+                const label = el.querySelector('.yakitori-label');
+                if (key && label) label.textContent = skewerName(SKEWER_TYPES[key]);
+            });
+            renderMenu();
+            const rankEl = document.getElementById('rank');
+            if (game && !game.gameRunning) rankEl.textContent = rankFor(game.score);
+        }
+
+        function toggleLang() {
+            lang = lang === 'ja' ? 'en' : 'ja';
+            try { localStorage.setItem('yakitori-lang', lang); } catch (e) {}
+            document.getElementById('shareNote').textContent = '';
+            applyLang();
+        }
+
+        // ===== シェア =====
+        async function shareResult() {
+            const score = game ? game.score : 0;
+            const text = T().shareText(score, rankFor(score));
+            const note = document.getElementById('shareNote');
+            note.textContent = '';
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: T().docTitle, text, url: SHARE_URL });
+                    return;
+                } catch (e) {
+                    if (e && e.name === 'AbortError') return; // 自分でキャンセルした
+                }
+            }
+            // Web Share API が使えないとき（主にPC）は X（旧Twitter）の投稿画面を開く
+            const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SHARE_URL)}`;
+            const win = window.open(intent, '_blank', 'noopener');
+            if (!win) {
+                try {
+                    await navigator.clipboard.writeText(`${text}\n${SHARE_URL}`);
+                    note.textContent = T().copied;
+                } catch (e) {
+                    note.textContent = T().shareFailed;
+                }
+            }
+        }
         // お客さん（串を出すたびに入れ替わる）
         const CUSTOMERS = [
             '👨‍💼', '👩‍💼', '👴', '👵', '🧔', '👨‍🦰', '👩‍🦱', '👱‍♀️', '🧑‍🦳',
@@ -1140,6 +1333,7 @@
                 const typeKey = SKEWER_KEYS[Math.floor(Math.random() * SKEWER_KEYS.length)];
                 const type = SKEWER_TYPES[typeKey];
                 yakitori.className = `yakitori type-${typeKey} rare`;
+                yakitori.dataset.type = typeKey;
 
                 yakitori.style.left = `${lane * laneWidth + (laneWidth - yakitoriWidth) / 2}px`;
 
@@ -1150,7 +1344,7 @@
                     <div class="stick"></div>
                     ${piecesHtml}
                     <div class="progress-bar"><div class="progress-fill"></div></div>
-                    <div class="yakitori-label">${type.name}</div>
+                    <div class="yakitori-label">${skewerName(type)}</div>
                 `;
 
                 this.yakitoris.push({
@@ -1215,11 +1409,10 @@
                 if (stage === 'perfect') {
                     this.addScore(type.points);
                     this.showScorePop(`+${type.points}`, rect);
-                    this.showReaction(`さんきゅう！ ${type.name} +${type.points}`, 'good', true);
+                    this.showReaction(T().good(skewerName(type), type.points), 'good', true);
                 } else {
                     this.addMiss();
-                    const reason = stage === 'burnt' ? '焦げてる！' : '生焼け！';
-                    this.showReaction(`こらー！ ${type.name}${reason}`, 'bad', false);
+                    this.showReaction(T().bad(skewerName(type), stage === 'burnt'), 'bad', false);
                 }
 
                 setTimeout(() => {
@@ -1246,8 +1439,8 @@
                 document.body.appendChild(puff);
                 setTimeout(() => puff.remove(), 900);
 
-                this.showScorePop('ミス', rect, 'burn');
-                this.showReaction(`焦がしたな！ ${type.name}が炭に…`, 'bad', false, false);
+                this.showScorePop(T().missPop, rect, 'burn');
+                this.showReaction(T().burnOut(skewerName(type)), 'bad', false, false);
                 this.addMiss();
             }
 
@@ -1263,7 +1456,7 @@
                 el.style.opacity = '0';
                 setTimeout(() => el.remove(), 600);
 
-                this.showScorePop('ポイッ', rect, 'toss');
+                this.showScorePop(T().tossPop, rect, 'toss');
             }
 
             showScorePop(text, rect, variant) {
@@ -1347,11 +1540,12 @@
 
         // ===== 画面まわり =====
         function rankFor(score) {
-            if (score >= 300) return '🏆 伝説の焼き師';
-            if (score >= 200) return '🔥 名人';
-            if (score >= 100) return '🍢 一人前';
-            if (score >= 50)  return '🙂 見習い';
-            return '🔰 まだまだこれから';
+            const r = T().ranks;
+            if (score >= 300) return r[4];
+            if (score >= 200) return r[3];
+            if (score >= 100) return r[2];
+            if (score >= 50)  return r[1];
+            return r[0];
         }
 
         function renderLives(misses, max) {
@@ -1373,10 +1567,10 @@
                 const t = SKEWER_TYPES[k];
                 return `<div class="menu-row">
                     <span class="menu-dot" style="background:${t.color}"></span>
-                    <span>${t.name}</span>
-                    <span class="menu-time" title="焼き時間 ${t.cookTime / 1000}秒"><span style="width:${t.cookTime / maxTime * 100}%"></span></span>
-                    <span class="menu-hit">${fmtSec(t.cookTime * PERFECT_FROM)}〜${fmtSec(t.cookTime)}秒</span>
-                    <span class="menu-pts">${t.points}点</span>
+                    <span>${skewerName(t)}</span>
+                    <span class="menu-time" title="${T().secTitle(t.cookTime / 1000)}"><span style="width:${t.cookTime / maxTime * 100}%"></span></span>
+                    <span class="menu-hit">${T().sec(fmtSec(t.cookTime * PERFECT_FROM), fmtSec(t.cookTime))}</span>
+                    <span class="menu-pts">${T().pts(t.points)}</span>
                 </div>`;
             }).join('');
         }
@@ -1397,6 +1591,7 @@
         function newGame() {
             document.getElementById('score').textContent = '0';
             document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('shareNote').textContent = '';
             document.getElementById('grill').innerHTML = '';
             nextCustomer();
             game = new YakitoriGame(soundManager);
@@ -1457,7 +1652,7 @@
         document.documentElement.style.setProperty('--zone-width', `${(1 - PERFECT_FROM) / BURN_OUT * 100}%`);
 
         document.addEventListener('DOMContentLoaded', function () {
-            renderMenu();
+            applyLang();
             renderLives(0, 5);
             setupInput();
             soundManager.setMuted(loadMuted());
@@ -1465,6 +1660,8 @@
 
             document.getElementById('startBtn').addEventListener('click', startGameWithSound);
             document.getElementById('restartBtn').addEventListener('click', restartGame);
+            document.getElementById('shareBtn').addEventListener('click', shareResult);
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', toggleLang));
             document.getElementById('muteBtn').addEventListener('click', () => {
                 soundManager.setMuted(!soundManager.muted);
                 saveMuted(soundManager.muted);
