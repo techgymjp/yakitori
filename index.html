@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>さんきゅうやきとり</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍢%3C/text%3E%3C/svg%3E">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
+        /* フォントは同梱（オフラインでも同じ見た目にするため）。画面で使う文字だけに絞ってある：scripts/subset-fonts.py */
+        @font-face { font-family: 'Dela Gothic One'; src: url('fonts/DelaGothicOne-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+        @font-face { font-family: 'Zen Maru Gothic'; src: url('fonts/ZenMaruGothic-Medium.woff2') format('woff2'); font-weight: 400 500; font-display: swap; }
+        @font-face { font-family: 'Zen Maru Gothic'; src: url('fonts/ZenMaruGothic-Bold.woff2') format('woff2'); font-weight: 600 700; font-display: swap; }
+        @font-face { font-family: 'Zen Maru Gothic'; src: url('fonts/ZenMaruGothic-Black.woff2') format('woff2'); font-weight: 800 900; font-display: swap; }
         :root {
             --ink: #1a120d;
             --wall: #2a1a12;
@@ -740,6 +742,83 @@
             transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
         .share-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #000, 0 4px 10px rgba(0,0,0,0.45); }
+        .secondary-btn {
+            font-family: var(--body);
+            font-weight: 900;
+            background: rgba(246,236,214,0.1);
+            color: var(--paper);
+            border: 2px solid rgba(246,236,214,0.7);
+            padding: 10px 26px;
+            font-size: clamp(16px, 4.4vw, 19px);
+            border-radius: 999px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .secondary-btn:active { transform: translateY(2px); }
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+        .best-line {
+            font-weight: 900;
+            font-size: 15px;
+            color: var(--gold);
+            min-height: 1.2em;
+            text-align: center;
+        }
+        .legal {
+            font-size: 12px;
+            color: rgba(246,236,214,0.7);
+            text-align: center;
+        }
+        .legal a { color: rgba(246,236,214,0.85); }
+        .overlay-title {
+            font-family: var(--display);
+            font-size: clamp(26px, 8vw, 40px);
+            color: #fbf6ea;
+            text-shadow: 0 3px 0 var(--red);
+            text-align: center;
+        }
+        /* アプリでは画面の下にバナー広告が出るので、その分あける */
+        body.has-banner .overlay { padding-bottom: 72px; }
+
+        /* 延長（リワード広告）の案内 */
+        .continue-box {
+            position: absolute;
+            inset: 0;
+            z-index: 250;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(14,9,6,0.55);
+        }
+        .continue-box.hidden { display: none; }
+        .continue-card {
+            width: min(320px, 100%);
+            background: var(--paper);
+            color: var(--paper-ink);
+            border-radius: 12px;
+            padding: 18px 16px 14px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .continue-card h2 { font-weight: 900; font-size: 20px; }
+        .continue-card .note { font-size: 12px; opacity: 0.75; }
+        .continue-card .primary-btn { font-size: 15px; padding: 10px 14px; white-space: nowrap; letter-spacing: 0.02em; font-family: var(--body); font-weight: 900; }
+        .continue-card .primary-btn:disabled { filter: grayscale(0.6); opacity: 0.8; }
+        .continue-card .link-btn {
+            background: none; border: none; color: var(--paper-ink);
+            font-family: var(--body); font-weight: 700; font-size: 14px;
+            text-decoration: underline; cursor: pointer; padding: 4px;
+        }
+        .receipt .extended { font-size: 13px; font-weight: 700; margin-top: 2px; opacity: 0.8; }
+
         .share-note {
             min-height: 1.2em;
             font-size: 13px;
@@ -761,12 +840,49 @@
             🔥 串をちょうどいい焼き加減で上にフリック！ 🔥<br>
             焼き時間：レバー（短）→ねぎま→もも→つくね→手羽先（長）
         </div>
+        <div class="best-line" id="bestLine"></div>
+        <div class="menu-buttons">
+            <button class="primary-btn" id="startBtn" data-i18n="startBtn">開店</button>
+            <button class="secondary-btn" id="howtoBtn" data-i18n="howtoBtn">あそびかた</button>
+        </div>
+        <div class="legal">
+            <span id="buildInfo"></span>
+            <a href="https://techgym.jp/privacy-policy/" id="privacyLink" target="_blank" rel="noopener" data-i18n="privacy">プライバシーポリシー</a>
+            <span id="adPrivacy" hidden>｜<a href="#" id="adPrivacyLink" data-i18n="adSettings">広告の設定</a></span>
+        </div>
+    </div>
+
+    <!-- あそびかた -->
+    <div class="overlay hidden" id="howtoScreen">
+        <div class="overlay-title" data-i18n="howtoBtn">あそびかた</div>
         <div class="menu-card">
             <h2 data-i18n="menuTitle">お品書き</h2>
             <div id="menuList"></div>
             <div class="menu-note" data-i18n-html="menuNote">秒数は「当たり」の時間（メーターが金色の間）。<br>焦げた串は下へフリックで捨てればミスになりません。<br>放っておくと燃え尽きてミス。売上50点ごとに速くなります</div>
         </div>
-        <button class="primary-btn" id="startBtn" data-i18n="startBtn">開店</button>
+        <div class="menu-buttons">
+            <button class="primary-btn" id="howtoPlay" data-i18n="startBtn">開店</button>
+            <button class="secondary-btn" id="howtoBack" data-i18n="backTop">トップへ</button>
+        </div>
+    </div>
+
+    <!-- ポーズ -->
+    <div class="overlay hidden" id="pauseScreen">
+        <div class="overlay-title" data-i18n="pauseTitle">ひと休み</div>
+        <div class="menu-buttons">
+            <button class="primary-btn" id="resumeBtn" data-i18n="resumeBtn">再開</button>
+            <button class="secondary-btn" id="pauseTop" data-i18n="backTop">トップへ</button>
+        </div>
+    </div>
+
+    <!-- 延長（リワード広告。アプリのみ） -->
+    <div class="continue-box hidden" id="continueBox">
+        <div class="continue-card">
+            <h2 data-i18n="contTitle">このままだと閉店…</h2>
+            <button class="primary-btn" id="contWatch" data-i18n="contWatch">▶ 広告を見てミスを1つ取り消す</button>
+            <div class="note" id="contNote"></div>
+            <button class="link-btn" id="contSkip"></button>
+        </div>
     </div>
 
     <div class="noren"><div class="noren-title" data-i18n-html="norenTitle">さんきゅう<span class="accent">やきとり</span></div></div>
@@ -778,6 +894,7 @@
         <div class="tag"><span class="label" data-i18n="salesLabel">売上</span><span class="value" id="score">0</span></div>
         <div class="hud-right">
             <div class="lives" id="lives" data-i18n-aria="livesAria" aria-label="のこりミス"></div>
+            <button class="icon-btn" id="pauseBtn" data-i18n-aria="pauseAria" aria-label="ひと休み">⏸</button>
             <button class="icon-btn" id="muteBtn" data-i18n-aria="muteAria" aria-label="音のオン・オフ">🔊</button>
         </div>
     </div>
@@ -808,6 +925,8 @@
             <hr>
             <div class="big"><span id="finalScore">0</span><small data-i18n="ptsUnit">点</small></div>
             <div class="rank" id="rank"></div>
+            <div class="extended" id="extendedLine"></div>
+            <div class="best-line" id="resultBest" style="color:var(--red);margin-top:4px"></div>
             <hr>
             <div class="sub" data-i18n="comeAgain">またのご来店をお待ちしております</div>
         </div>
@@ -815,10 +934,14 @@
             <button class="share-btn" id="shareBtn" data-i18n="shareBtn">結果をシェア</button>
             <button class="primary-btn" id="restartBtn" data-i18n="restartBtn">もう一度</button>
         </div>
+        <button class="secondary-btn" id="resultTop" data-i18n="backTop">トップへ</button>
         <div class="share-note" id="shareNote" aria-live="polite"></div>
         <button class="lang-btn" data-i18n="langSwitch">English</button>
     </div>
 
+    <script src="build-info.js"></script>
+    <script src="ads-config.js"></script>
+    <script src="ads.js"></script>
     <script>
         // ===== 串の種類 =====
         // cookTime = 完璧になるまでの時間(ms)。焼き時間の PERFECT_FROM(60%)〜100% が「当たり」
@@ -868,7 +991,25 @@
                 missPop: 'ミス',
                 tossPop: 'ポイッ',
                 ranks: ['🔰 まだまだこれから', '🙂 見習い', '🍢 一人前', '🔥 名人', '🏆 伝説の焼き師'],
-                shareText: (score, rank) => `さんきゅうやきとりで本日の売上${score}点！【${rank}】\n焼き加減を見極めて串をフリックするゲーム🍢 #さんきゅうやきとり`,
+                shareText: (score, rank, ext) => `さんきゅうやきとりで本日の売上${score}点！【${rank}】${ext ? `（延長${ext}回）` : ''}\n焼き加減を見極めて串をフリックするゲーム🍢 #さんきゅうやきとり`,
+                shareDialog: '結果をシェア',
+                howtoBtn: 'あそびかた',
+                backTop: 'トップへ',
+                pauseTitle: 'ひと休み',
+                pauseAria: 'ひと休み',
+                resumeBtn: '再開',
+                best: (n) => `ベスト ${n}点`,
+                newBest: '🎉 ベスト更新！',
+                privacy: 'プライバシーポリシー',
+                privacyUrl: 'https://techgym.jp/privacy-policy/',
+                adSettings: '広告の設定',
+                contTitle: 'このままだと閉店…',
+                contWatch: '▶ 広告を見てミスを1つ取り消す',
+                contNote: '延長は1ゲーム1回まで',
+                contSkip: (s) => `閉店する（${s}）`,
+                contLoading: '広告を読み込み中…',
+                contFail: '広告を読み込めませんでした',
+                extended: (n) => `延長 ${n}回`,
                 copied: 'リンクをコピーしました',
                 shareFailed: 'シェアできませんでした'
             },
@@ -901,7 +1042,25 @@
                 missPop: 'Miss',
                 tossPop: 'Toss!',
                 ranks: ['🔰 Just getting started', '🙂 Apprentice', '🍢 Pro', '🔥 Master', '🏆 Legendary Grill Master'],
-                shareText: (score, rank) => `I made ${score} pts in sales at Thank You Yakitori! [${rank}]\nFlick the skewers when they’re grilled just right 🍢 #ThankYouYakitori`,
+                shareText: (score, rank, ext) => `I made ${score} pts in sales at Thank You Yakitori! [${rank}]${ext ? ` (extended ${ext}×)` : ''}\nFlick the skewers when they’re grilled just right 🍢 #ThankYouYakitori`,
+                shareDialog: 'Share your result',
+                howtoBtn: 'How to play',
+                backTop: 'Back to top',
+                pauseTitle: 'Paused',
+                pauseAria: 'Pause',
+                resumeBtn: 'Resume',
+                best: (n) => `Best ${n} pts`,
+                newBest: '🎉 New best!',
+                privacy: 'Privacy Policy',
+                privacyUrl: 'https://techgym.jp/privacy-policy-en/',
+                adSettings: 'Ad settings',
+                contTitle: 'About to close the shop…',
+                contWatch: '▶ Watch an ad to undo 1 miss',
+                contNote: 'Once per game',
+                contSkip: (s) => `Close the shop (${s})`,
+                contLoading: 'Loading ad…',
+                contFail: 'Could not load the ad',
+                extended: (n) => `Extended ${n}×`,
                 copied: 'Link copied',
                 shareFailed: 'Could not share'
             }
@@ -938,8 +1097,9 @@
                 if (key && label) label.textContent = skewerName(SKEWER_TYPES[key]);
             });
             renderMenu();
-            const rankEl = document.getElementById('rank');
-            if (game && !game.gameRunning) rankEl.textContent = rankFor(game.score);
+            document.getElementById('privacyLink').href = dict.privacyUrl;
+            renderBest();
+            if (game && !game.gameRunning) fillResult(game, false);
         }
 
         function toggleLang() {
@@ -952,9 +1112,14 @@
         // ===== シェア =====
         async function shareResult() {
             const score = game ? game.score : 0;
-            const text = T().shareText(score, rankFor(score));
+            const text = T().shareText(score, rankFor(score), game ? game.continuesUsed : 0);
             const note = document.getElementById('shareNote');
             note.textContent = '';
+            const nativeShare = plugin('Share');
+            if (nativeShare) {
+                try { await nativeShare.share({ title: T().docTitle, text, url: SHARE_URL, dialogTitle: T().shareDialog }); } catch (e) { /* キャンセル */ }
+                return;
+            }
             if (navigator.share) {
                 try {
                     await navigator.share({ title: T().docTitle, text, url: SHARE_URL });
@@ -965,7 +1130,8 @@
             }
             // Web Share API が使えないとき（主にPC）は X（旧Twitter）の投稿画面を開く
             const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SHARE_URL)}`;
-            const win = window.open(intent, '_blank', 'noopener');
+            const win = window.open(intent, '_blank');
+            if (win) win.opener = null;
             if (!win) {
                 try {
                     await navigator.clipboard.writeText(`${text}\n${SHARE_URL}`);
@@ -1241,6 +1407,9 @@
                 this.speedFactor = 1.0; // 焼き時間の倍率（スコアに応じて短くなる）
                 this.spawnInterval = 2000; // 2秒ごとに新しい焼き鳥
                 this.gameRunning = true;
+                this.paused = false;        // ポーズ中・延長の案内中は時間を止める
+                this.continuing = false;    // 延長（リワード広告）の案内中
+                this.continuesUsed = 0;     // このゲームで延長した回数
                 this.lastFrame = performance.now();
 
                 this.grill = document.getElementById('grill');
@@ -1255,7 +1424,7 @@
 
             // 入力は指（またはマウス）ごとに別々に追いかける。id = touch.identifier / 'mouse'
             handleStart(id, target, clientX, clientY) {
-                if (!this.gameRunning || this.drags.has(id)) return;
+                if (!this.gameRunning || this.paused || this.drags.has(id)) return;
                 const yakitori = target && target.closest ? target.closest('.yakitori') : null;
                 if (!yakitori) return false;
                 // 飛んでいる・捨てた・燃え尽きた・別の指がつかんでいる串はつかめない
@@ -1314,6 +1483,10 @@
 
             spawnYakitori() {
                 if (!this.gameRunning) return;
+                if (this.paused) {
+                    setTimeout(() => this.spawnYakitori(), 250);
+                    return;
+                }
 
                 // 網を串の幅で列に分け、空いている列にだけ置く（重なって取れないのを防ぐ）
                 const grillWidth = this.grill.clientWidth;
@@ -1508,10 +1681,34 @@
             }
 
             addMiss() {
-                if (!this.gameRunning) return;
+                if (!this.gameRunning || this.continuing) return;
                 this.misses++;
                 renderLives(this.misses, this.maxMisses);
-                if (this.misses >= this.maxMisses) this.gameOver();
+                if (this.misses >= this.maxMisses) {
+                    if (canContinue(this)) offerContinue(this);
+                    else this.gameOver();
+                }
+            }
+
+            // つかんでいる串をすべて網に戻す
+            releaseAll() {
+                for (const id of [...this.drags.keys()]) this.handleCancel(id);
+            }
+
+            pause() {
+                if (!this.gameRunning || this.paused) return;
+                this.paused = true;
+                this.releaseAll();
+                AppAudio.suspend();
+                showScreen('paused');
+            }
+
+            resume() {
+                if (!this.gameRunning) return;
+                this.paused = false;
+                this.lastFrame = performance.now();
+                showScreen('playing');
+                AppAudio.resume();
             }
 
             removeYakitori(index) {
@@ -1523,16 +1720,24 @@
 
             gameOver() {
                 this.gameRunning = false;
+                this.paused = false;
+                this.continuing = false;
+                this.releaseAll();
                 this.soundManager.stopBGM();
                 this.soundManager.play('gameover');
-                document.getElementById('finalScore').textContent = this.score;
-                document.getElementById('rank').textContent = rankFor(this.score);
-                document.getElementById('gameOver').classList.remove('hidden');
+                const isNewBest = saveBest(this.score);
+                fillResult(this, isNewBest);
+                showScreen('over');
             }
 
             gameLoop() {
                 if (!this.gameRunning) return;
                 const now = performance.now();
+                if (this.paused) {
+                    this.lastFrame = now;
+                    requestAnimationFrame(() => this.gameLoop());
+                    return;
+                }
                 // 実時間で焼く（120Hz画面でも同じ速さ。タブ復帰時の大きな飛びは抑える）
                 const dt = Math.min(now - this.lastFrame, 100);
                 this.lastFrame = now;
@@ -1581,6 +1786,180 @@
         let game = null;
         const soundManager = new SoundManager();
 
+        // Android アプリ（Capacitor）で動いているか。Web 版では Capacitor がないので何もしない
+        const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+        const plugin = (name) => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Plugins[name] : null);
+        // ads.js がないとき（ファイルを直接開いた場合など）でも動くように
+        const AdsApi = window.Ads || { available: false, canReward: false, showing: false, privacyOptionsRequired: false,
+            initDone: Promise.resolve(), showInterstitial: async () => {}, showRewarded: async () => 'unavailable',
+            setBanner: () => {}, showPrivacyOptions: async () => {} };
+
+        // 音をまとめて止める・戻す（広告の表示中・ポーズ中・別のアプリに切り替えたとき）
+        window.AppAudio = {
+            suspend() {
+                const ctx = soundManager.music.ctx;
+                if (ctx && ctx.state === 'running') ctx.suspend();
+                soundManager.sounds.sizzle.pause();
+            },
+            // 遊んでいる最中（ポーズ・延長の案内中でない）ときだけ音を戻す
+            resume() {
+                if (!game || !game.gameRunning || game.paused || AdsApi.showing || document.hidden) return;
+                const ctx = soundManager.music.ctx;
+                if (ctx && ctx.state === 'suspended') ctx.resume();
+                if (soundManager.music.timer) soundManager.sounds.sizzle.play().catch(() => {});
+            }
+        };
+
+        // ===== 画面の切り替え =====
+        // screen: 'title' | 'howto' | 'playing' | 'paused' | 'over'
+        let screen = 'title';
+        function showScreen(next) {
+            screen = next;
+            const vis = { startScreen: 'title', howtoScreen: 'howto', pauseScreen: 'paused', gameOver: 'over' };
+            for (const [id, sc] of Object.entries(vis)) document.getElementById(id).classList.toggle('hidden', screen !== sc);
+            if (screen !== 'playing') document.getElementById('continueBox').classList.add('hidden');
+            updateBanner();
+        }
+
+        // バナー広告：トップ・あそびかた・ポーズ・結果画面だけ（プレイ中は網の串と重なるので出さない）
+        function updateBanner() {
+            const want = ['title', 'howto', 'paused', 'over'].includes(screen);
+            AdsApi.setBanner(want);
+        }
+
+        // ===== ベスト記録 =====
+        function loadBest() {
+            try { return parseInt(localStorage.getItem('yakitori-best') || '0', 10) || 0; } catch (e) { return 0; }
+        }
+        function saveBest(score) {
+            if (score <= loadBest()) return false;
+            try { localStorage.setItem('yakitori-best', String(score)); } catch (e) {}
+            renderBest();
+            return score > 0;
+        }
+        function renderBest() {
+            const best = loadBest();
+            document.getElementById('bestLine').textContent = best > 0 ? T().best(best) : '';
+        }
+        function fillResult(g, isNewBest) {
+            document.getElementById('finalScore').textContent = g.score;
+            document.getElementById('rank').textContent = rankFor(g.score);
+            document.getElementById('extendedLine').textContent = g.continuesUsed ? T().extended(g.continuesUsed) : '';
+            const best = loadBest();
+            const el = document.getElementById('resultBest');
+            if (isNewBest) { el.textContent = T().newBest; el.dataset.newBest = '1'; }
+            else if (el.dataset.newBest === '1' && best === g.score) { el.textContent = T().newBest; }
+            else { el.textContent = best > 0 ? T().best(best) : ''; el.dataset.newBest = ''; }
+        }
+
+        // ===== 全画面広告（アプリのみ）=====
+        // 「開店（トップ・あそびかたから）」「トップへ（あそびかた・ポーズ・結果画面から）」
+        // 「ポーズからの再開」「結果画面からもう一度」のたびに毎回出す
+        let adBusy = false;
+        // toPlay: 広告のあとプレイ画面に行くとき true（広告を閉じた直後にバナーが一瞬出ないよう先に止める）
+        async function withInterstitial(next, toPlay = false) {
+            if (adBusy) return;
+            if (toPlay) AdsApi.setBanner(false);
+            if (AdsApi.available) {
+                adBusy = true;
+                await AdsApi.showInterstitial(3000);
+                adBusy = false;
+            }
+            next();
+        }
+
+        function play() {
+            if (screen !== 'title' && screen !== 'howto') return;
+            soundManager.music.ensureContext(); // ボタンを押した中で音を使えるようにしておく
+            withInterstitial(startGameWithSound, true);
+        }
+        function goTop() {
+            withInterstitial(() => {
+                if (game) { game.gameRunning = false; game.releaseAll(); }
+                soundManager.stopAll();
+                document.getElementById('grill').innerHTML = '';
+                document.getElementById('speech').classList.remove('show');
+                renderBest();
+                showScreen('title');
+            });
+        }
+        function resumeFromPause() {
+            if (!game || !game.paused || game.continuing) return;
+            withInterstitial(() => { if (game && game.paused) game.resume(); else updateBanner(); }, true);
+        }
+        function openHowto() { if (screen === 'title' && !adBusy) showScreen('howto'); }
+        function backFromHowto() { withInterstitial(() => { if (screen === 'howto') showScreen('title'); }); }
+        function playAgain() { if (screen === 'over') withInterstitial(restartGame, true); }
+
+        // ===== 延長（リワード広告のチート）=====
+        // ミス5回で閉店になるとき、広告を最後まで見ればミスを1つ取り消して続けられる（アプリのみ・1ゲーム1回）
+        // 燃え尽きた串やお客さんの反応を見届けられるよう、少し待ってから案内を出し、数秒で自動的に閉店へ進む
+        const CONTINUE_MAX = 1;
+        const CONTINUE_DELAY = 2200;
+        const CONTINUE_WAIT = 6;
+        const cont = { timer: null, tick: null, busy: false, left: 0 };
+        function canContinue(g) { return AdsApi.canReward && g.continuesUsed < CONTINUE_MAX; }
+        function offerContinue(g) {
+            g.continuing = true;
+            g.paused = true;
+            g.releaseAll();
+            cont.busy = false;
+            cont.timer = setTimeout(() => {
+                if (!g.gameRunning || game !== g) return;
+                cont.left = CONTINUE_WAIT;
+                const watch = document.getElementById('contWatch');
+                watch.disabled = false;
+                watch.textContent = T().contWatch;
+                document.getElementById('contNote').textContent = T().contNote;
+                document.getElementById('contSkip').textContent = T().contSkip(cont.left);
+                document.getElementById('continueBox').classList.remove('hidden');
+                cont.tick = setInterval(() => {
+                    if (cont.busy) return;
+                    cont.left--;
+                    document.getElementById('contSkip').textContent = T().contSkip(Math.max(0, cont.left));
+                    if (cont.left <= 0) declineContinue();
+                }, 1000);
+            }, CONTINUE_DELAY);
+        }
+        function closeContinue() {
+            clearTimeout(cont.timer);
+            clearInterval(cont.tick);
+            cont.timer = cont.tick = null;
+            document.getElementById('continueBox').classList.add('hidden');
+        }
+        function declineContinue() {
+            if (!game || !game.continuing) return;
+            closeContinue();
+            game.gameOver();
+        }
+        async function watchContinue() {
+            if (!game || !game.continuing || cont.busy) return;
+            cont.busy = true;
+            const watch = document.getElementById('contWatch');
+            watch.disabled = true;
+            watch.textContent = T().contLoading;
+            const g = game;
+            const result = await AdsApi.showRewarded();
+            if (game !== g || !g.continuing) return;
+            if (result === 'unavailable') {
+                document.getElementById('contNote').textContent = T().contFail;
+                setTimeout(declineContinue, 2000);
+                return;
+            }
+            if (result !== 'rewarded') { declineContinue(); return; }
+            // 最後まで見た：ミスを1つ取り消し、焦げている串は片付けてから再開
+            closeContinue();
+            g.continuesUsed++;
+            g.misses = g.maxMisses - 1;
+            renderLives(g.misses, g.maxMisses);
+            for (let i = g.yakitoris.length - 1; i >= 0; i--) {
+                const y = g.yakitoris[i];
+                if (y.stage === 'burnt' && !y.element.classList.contains('flying')) g.tossYakitori(y.element);
+            }
+            g.continuing = false;
+            g.resume();
+        }
+
         function loadMuted() {
             try { return localStorage.getItem('yakitori-muted') === '1'; } catch (e) { return false; }
         }
@@ -1592,8 +1971,10 @@
         }
 
         function newGame() {
+            closeContinue();
             document.getElementById('score').textContent = '0';
-            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('resultBest').dataset.newBest = '';
+            showScreen('playing');
             document.getElementById('shareNote').textContent = '';
             document.getElementById('grill').innerHTML = '';
             nextCustomer();
@@ -1605,11 +1986,14 @@
             soundManager.play('start');
             soundManager.playBGM();
             document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('howtoScreen').classList.add('hidden');
+            screen = 'starting';
+            updateBanner();
             setTimeout(newGame, 500);
         }
 
         function restartGame() {
-            if (game) game.gameRunning = false;
+            if (game) { game.gameRunning = false; game.releaseAll(); }
             soundManager.stopAll();
             soundManager.playBGM();
             newGame();
@@ -1661,8 +2045,56 @@
             soundManager.setMuted(loadMuted());
             applyMuteUI();
 
-            document.getElementById('startBtn').addEventListener('click', startGameWithSound);
-            document.getElementById('restartBtn').addEventListener('click', restartGame);
+            renderBest();
+            document.getElementById('startBtn').addEventListener('click', play);
+            document.getElementById('howtoBtn').addEventListener('click', openHowto);
+            document.getElementById('howtoPlay').addEventListener('click', play);
+            document.getElementById('howtoBack').addEventListener('click', backFromHowto);
+            document.getElementById('pauseBtn').addEventListener('click', () => { if (game && screen === 'playing' && !game.continuing) game.pause(); });
+            document.getElementById('resumeBtn').addEventListener('click', resumeFromPause);
+            document.getElementById('pauseTop').addEventListener('click', () => { if (screen === 'paused') goTop(); });
+            document.getElementById('restartBtn').addEventListener('click', playAgain);
+            document.getElementById('resultTop').addEventListener('click', () => { if (screen === 'over') goTop(); });
+            document.getElementById('contWatch').addEventListener('click', watchContinue);
+            document.getElementById('contSkip').addEventListener('click', declineContinue);
+
+            // キーボード（PC）：P / Esc でひと休み・再開
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'p' && e.key !== 'P' && e.key !== 'Escape') return;
+                if (screen === 'playing' && game && !game.continuing) game.pause();
+                else if (screen === 'paused') resumeFromPause();
+            });
+
+            // 別のアプリに切り替えたら（画面が隠れたら）自動でひと休みし、音を止める
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (screen === 'playing' && game && !game.continuing) game.pause();
+                    AppAudio.suspend();
+                } else {
+                    AppAudio.resume();
+                }
+            });
+
+            // Android の戻るボタン：プレイ中はひと休み（ひと休み中なら再開）、あそびかたではトップへ、トップ・結果画面ではアプリを閉じる
+            if (plugin('App')) {
+                plugin('App').addListener('backButton', () => {
+                    if (adBusy) return;
+                    if (screen === 'howto') backFromHowto();
+                    else if (screen === 'title' || screen === 'over') plugin('App').exitApp();
+                    else if (screen === 'paused') resumeFromPause();
+                    else if (screen === 'playing' && game) {
+                        if (game.continuing) declineContinue();
+                        else game.pause();
+                    }
+                });
+            }
+
+            // トップ画面の下：バージョン（アプリ版）・プライバシーポリシー・広告の設定（EU など同意が必要な地域）
+            if (window.APP_VERSION && window.APP_VERSION !== 'dev') document.getElementById('buildInfo').textContent = window.APP_VERSION + '｜';
+            AdsApi.initDone.then(() => { if (AdsApi.privacyOptionsRequired) document.getElementById('adPrivacy').hidden = false; });
+            document.getElementById('adPrivacyLink').addEventListener('click', (e) => { e.preventDefault(); AdsApi.showPrivacyOptions(); });
+            if (AdsApi.available) document.body.classList.add('has-banner');
+            updateBanner();
             document.getElementById('shareBtn').addEventListener('click', shareResult);
             document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', toggleLang));
             document.getElementById('muteBtn').addEventListener('click', () => {
