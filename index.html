@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>さんきゅうやきとり</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍢%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -29,6 +30,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow: hidden; }
 
         body {
             font-family: var(--body);
@@ -261,6 +263,7 @@
             left: 6px; right: 6px;
             height: var(--grill-h);
             z-index: 10;
+            overflow-x: clip; /* 串が左右にはみ出して画面幅が広がらないように（上方向は見せる） */
         }
         .grill-area {
             position: absolute;
@@ -762,7 +765,7 @@
 
     <script>
         // ===== 串の種類 =====
-        // cookTime = 完璧になるまでの時間(ms)。焼き時間の70〜100%が「当たり」
+        // cookTime = 完璧になるまでの時間(ms)。焼き時間の PERFECT_FROM(60%)〜100% が「当たり」
         const SKEWER_TYPES = {
             reba:     { name: 'レバー', cookTime: 2000, points: 15, color: '#7a4430',
                         pieces: [['reba',18],['reba',48],['reba',78],['reba',108]] },
@@ -1038,6 +1041,7 @@
                 this.misses = 0;
                 this.maxMisses = 5;
                 this.yakitoris = [];
+                this.drags = new Map(); // 指ごとのドラッグ状態
                 this.speedFactor = 1.0; // 焼き時間の倍率（スコアに応じて短くなる）
                 this.spawnInterval = 2000; // 2秒ごとに新しい焼き鳥
                 this.gameRunning = true;
@@ -1053,66 +1057,91 @@
                 this.spawnYakitori();
             }
 
-            handleStart(e, clientX, clientY) {
-                if (!this.gameRunning) return;
-                const yakitori = e.target.closest('.yakitori');
-                if (yakitori && !yakitori.classList.contains('flying')) {
-                    this.isDragging = true;
-                    this.startY = clientY;
-                    this.startX = clientX;
-                    this.currentYakitori = yakitori;
-                    yakitori.classList.add('dragging');
-                }
+            // 入力は指（またはマウス）ごとに別々に追いかける。id = touch.identifier / 'mouse'
+            handleStart(id, target, clientX, clientY) {
+                if (!this.gameRunning || this.drags.has(id)) return;
+                const yakitori = target && target.closest ? target.closest('.yakitori') : null;
+                if (!yakitori) return false;
+                // 飛んでいる・捨てた・燃え尽きた・別の指がつかんでいる串はつかめない
+                if (yakitori.classList.contains('flying') || yakitori.classList.contains('tossed') ||
+                    yakitori.classList.contains('charred') || yakitori.classList.contains('dragging')) return false;
+                this.drags.set(id, { el: yakitori, startX: clientX, startY: clientY });
+                yakitori.classList.add('dragging');
+                return true;
             }
 
-            handleMove(e, clientX, clientY) {
-                if (this.isDragging && this.currentYakitori) {
-                    const deltaY = this.startY - clientY;
-                    const deltaX = clientX - this.startX;
-                    if (deltaY > 0) {
-                        this.currentYakitori.style.transform = `translateY(-${deltaY}px) translateX(${deltaX}px)`;
-                    } else {
-                        // 下方向は少しだけ動かす（捨てる操作）
-                        const down = Math.min(-deltaY, 60);
-                        this.currentYakitori.style.transform = `translateY(${down}px) translateX(${deltaX}px)`;
-                    }
+            handleMove(id, clientX, clientY) {
+                const d = this.drags.get(id);
+                if (!d) return false;
+                const deltaY = d.startY - clientY;
+                const deltaX = clientX - d.startX;
+                if (deltaY > 0) {
+                    d.el.style.transform = `translateY(-${deltaY}px) translateX(${deltaX}px)`;
+                } else {
+                    // 下方向は少しだけ動かす（捨てる操作）
+                    const down = Math.min(-deltaY, 60);
+                    d.el.style.transform = `translateY(${down}px) translateX(${deltaX}px)`;
                 }
+                return true;
             }
 
-            handleEnd(e) {
-                if (this.isDragging && this.currentYakitori) {
-                    const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-                    const deltaY = this.startY - endY;
+            handleEnd(id, clientX, clientY) {
+                const d = this.drags.get(id);
+                if (!d) return false;
+                this.drags.delete(id);
+                const el = d.el;
+                el.classList.remove('dragging');
+                if (!this.gameRunning || !this.yakitoris.some(y => y.element === el)) return true;
 
-                    if (deltaY > 50) { // 上フリック：お客さんに出す
-                        this.soundManager.play('flick');
-                        this.serveYakitori(this.currentYakitori);
-                    } else if (deltaY < -40 && this.currentYakitori.classList.contains('burnt')) {
-                        // 下フリック：焦げた串を捨てる（ミスにならない）
-                        this.tossYakitori(this.currentYakitori);
-                    } else {
-                        this.currentYakitori.style.transform = '';
-                    }
-
-                    this.currentYakitori.classList.remove('dragging');
-                    this.currentYakitori = null;
-                    this.isDragging = false;
+                const deltaY = d.startY - clientY;
+                if (deltaY > 50) { // 上フリック：お客さんに出す
+                    this.soundManager.play('flick');
+                    this.serveYakitori(el);
+                } else if (deltaY < -40 && el.classList.contains('burnt')) {
+                    // 下フリック：焦げた串を捨てる（ミスにならない）
+                    this.tossYakitori(el);
+                } else {
+                    el.style.transform = '';
                 }
+                return true;
+            }
+
+            // 指が画面外に出た・着信などで中断されたときは元の位置に戻す
+            handleCancel(id) {
+                const d = this.drags.get(id);
+                if (!d) return false;
+                this.drags.delete(id);
+                d.el.classList.remove('dragging');
+                d.el.style.transform = '';
+                return true;
             }
 
             spawnYakitori() {
                 if (!this.gameRunning) return;
+
+                // 網を串の幅で列に分け、空いている列にだけ置く（重なって取れないのを防ぐ）
+                const grillWidth = this.grill.clientWidth;
+                const yakitoriWidth = Math.min(80, Math.max(60, window.innerWidth * 0.12)); // CSSの clamp(60px, 12vw, 80px) と同じ
+                const laneCount = Math.max(1, Math.floor(grillWidth / (yakitoriWidth + 8)));
+                const laneWidth = grillWidth / laneCount;
+                const used = new Set(this.yakitoris
+                    .filter(y => !y.element.classList.contains('flying'))
+                    .map(y => y.lane));
+                const free = [];
+                for (let i = 0; i < laneCount; i++) if (!used.has(i)) free.push(i);
+                if (free.length === 0) {
+                    // 満席なら少し待ってからもう一度
+                    setTimeout(() => this.spawnYakitori(), 300);
+                    return;
+                }
+                const lane = free[Math.floor(Math.random() * free.length)];
 
                 const yakitori = document.createElement('div');
                 const typeKey = SKEWER_KEYS[Math.floor(Math.random() * SKEWER_KEYS.length)];
                 const type = SKEWER_TYPES[typeKey];
                 yakitori.className = `yakitori type-${typeKey} rare`;
 
-                // 画面幅に応じた位置
-                const grillWidth = this.grill.clientWidth;
-                const yakitoriWidth = Math.min(80, window.innerWidth * 0.12);
-                const leftPosition = Math.random() * Math.max(grillWidth - yakitoriWidth - 10, 10) + 5;
-                yakitori.style.left = `${leftPosition}px`;
+                yakitori.style.left = `${lane * laneWidth + (laneWidth - yakitoriWidth) / 2}px`;
 
                 const piecesHtml = type.pieces
                     .map(([kind, top]) => `<div class="piece p-${kind}" style="top:${top}px">${kind === 'tebasaki' ? TEBASAKI_SVG : ''}</div>`)
@@ -1128,6 +1157,7 @@
                     element: yakitori,
                     fill: yakitori.querySelector('.progress-fill'),
                     typeKey: typeKey,
+                    lane: lane,
                     cookTime: 0,
                     targetTime: type.cookTime * this.speedFactor,
                     stage: 'rare'
@@ -1143,7 +1173,7 @@
                     const yakitori = this.yakitoris[index];
                     if (yakitori.element.classList.contains('flying')) continue;
                     // 指でつかんでいる間は網から離れているので焼けない（つかんだ瞬間の焼き加減で判定）
-                    if (yakitori.element === this.currentYakitori) continue;
+                    if (yakitori.element.classList.contains('dragging')) continue;
 
                     yakitori.cookTime += dt;
 
@@ -1165,10 +1195,6 @@
 
                     // 焦げすぎたら自動的に失敗
                     if (progress > BURN_OUT) {
-                        if (yakitori.element === this.currentYakitori) {
-                            this.currentYakitori = null;
-                            this.isDragging = false;
-                        }
                         this.burnOut(index);
                         if (!this.gameRunning) return;
                     }
@@ -1394,27 +1420,36 @@
         // 入力は1回だけ登録し、現在のゲームに渡す
         function setupInput() {
             const grill = document.getElementById('grill');
-            grill.addEventListener('mousedown', (e) => game && game.handleStart(e, e.clientX, e.clientY));
+
+            // タッチ：changedTouches を1本ずつ、identifier で区別して処理（両手の親指で遊べる）
             grill.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                const t = e.touches[0];
-                if (game) game.handleStart(e, t.clientX, t.clientY);
+                if (!game) return;
+                for (const t of e.changedTouches) game.handleStart(t.identifier, t.target, t.clientX, t.clientY);
             }, { passive: false });
 
-            document.addEventListener('mousemove', (e) => game && game.handleMove(e, e.clientX, e.clientY));
             document.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                const t = e.touches[0];
-                if (game) game.handleMove(e, t.clientX, t.clientY);
+                if (!game) return;
+                for (const t of e.changedTouches) game.handleMove(t.identifier, t.clientX, t.clientY);
             }, { passive: false });
 
-            document.addEventListener('mouseup', (e) => game && game.handleEnd(e));
             document.addEventListener('touchend', (e) => {
-                if (game && game.isDragging) {
-                    e.preventDefault();
-                    game.handleEnd(e);
-                }
+                if (!game) return;
+                let handled = false;
+                for (const t of e.changedTouches) handled = game.handleEnd(t.identifier, t.clientX, t.clientY) || handled;
+                if (handled) e.preventDefault();
             }, { passive: false });
+
+            document.addEventListener('touchcancel', (e) => {
+                if (!game) return;
+                for (const t of e.changedTouches) game.handleCancel(t.identifier);
+            });
+
+            // マウス
+            grill.addEventListener('mousedown', (e) => game && game.handleStart('mouse', e.target, e.clientX, e.clientY));
+            document.addEventListener('mousemove', (e) => game && game.handleMove('mouse', e.clientX, e.clientY));
+            document.addEventListener('mouseup', (e) => game && game.handleEnd('mouse', e.clientX, e.clientY));
         }
 
         // メーターの金色の帯（当たりゾーン）の位置
