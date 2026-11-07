@@ -1,5 +1,8 @@
 Thank You Yakitori - Google Play store listing (English / en-US)
 
+Images for the English listing: icon-512.png (512x512), feature-graphic-en.png (1024x500),
+screenshots en-1-title.png ... en-4-result.png (1080x1920, portrait)
+
 [App name] (max 30 characters)
 Thank You Yakitori: Grill Game
 

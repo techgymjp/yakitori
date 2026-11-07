@@ -6,7 +6,7 @@ Play Console の「ストアの掲載情報」に貼り付けて使います。�
 - パッケージ名: `jp.techgym.yakitori`
 - カテゴリ: ゲーム ＞ カジュアル
 - プライバシーポリシー: 日本語 https://techgym.jp/privacy-policy/ ・英語 https://techgym.jp/privacy-policy-en/
-- 画像: アイコン `icon-512.png`（512×512）、フィーチャーグラフィック `feature-graphic.png`（1024×500）、
+- 画像: アイコン `icon-512.png`（512×512）、フィーチャーグラフィック 日本語 `feature-graphic.png`・英語 `feature-graphic-en.png`（1024×500）、
   スクリーンショット `ja-1〜4-*.png` / `en-1〜4-*.png`（1080×1920、縦）
 
 ---

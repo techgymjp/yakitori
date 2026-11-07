@@ -1,6 +1,6 @@
 // Google Play 用の画像（docs/store/）を作る。ゲームを自動操作して撮影する。
 // 使い方: npm run build && node scripts/store-shots.js   （Playwright が必要）
-//   スクリーンショット 1080×1920（日英 各 4 枚）・フィーチャーグラフィック 1024×500・アイコン 512×512
+//   スクリーンショット 1080×1920（日英 各 4 枚）・フィーチャーグラフィック 1024×500（日英）・アイコン 512×512
 const path = require('path');
 const { chromium } = require('playwright');
 
@@ -76,6 +76,12 @@ const url = 'file://' + path.join(root, 'www', 'index.html');
   const iconOnly = dataUrl(path.join(root, 'assets', 'icon-only.png'), 'image/png');
   const dela = dataUrl(path.join(root, 'fonts', 'DelaGothicOne-Regular.woff2'), 'font/woff2');
   const zen = dataUrl(path.join(root, 'fonts', 'ZenMaruGothic-Bold.woff2'), 'font/woff2');
+  // 日本語版（feature-graphic.png）と英語版（feature-graphic-en.png）
+  const fg = [
+    { file: 'feature-graphic.png', title: 'さんきゅう<br><span>やきとり</span>', sub: '焼き加減を見極めて、串をフリック！', size: 84 },
+    { file: 'feature-graphic-en.png', title: 'THANK YOU<br><span>YAKITORI</span>', sub: 'Flick each skewer when it’s grilled just right!', size: 70 },
+  ];
+  for (const f of fg) {
   await p.setContent(`<html><head><style>
     @font-face { font-family: 'Dela Gothic One'; src: url('${dela}'); }
     @font-face { font-family: 'Zen Maru Gothic'; src: url('${zen}'); font-weight: 700; }
@@ -83,7 +89,7 @@ const url = 'file://' + path.join(root, 'www', 'index.html');
       background: radial-gradient(ellipse 60% 70% at 70% 100%, rgba(255,106,26,0.55), transparent 70%), linear-gradient(180deg, #26386a, #141d38); }
     .noren { position:absolute; top:0; left:0; right:0; height:46px; background:
       repeating-linear-gradient(90deg, transparent 0 calc(25% - 3px), #141d38 calc(25% - 3px) 25%), #1d2b4f; border-top:8px solid #5a3a22; }
-    .title { position:absolute; left:64px; top:150px; color:#fbf6ea; font-size:84px; line-height:1.05; text-shadow:0 6px 0 #c8322b; }
+    .title { position:absolute; left:64px; top:150px; color:#fbf6ea; font-size:${f.size}px; line-height:1.05; text-shadow:0 6px 0 #c8322b; }
     .title span { color:#f5b83d; }
     .sub { position:absolute; left:68px; top:360px; color:#fbe8c8; font-size:28px; font-family:'Zen Maru Gothic'; font-weight:700; }
     img { position:absolute; right:30px; top:40px; width:470px; height:470px; }
@@ -91,12 +97,13 @@ const url = 'file://' + path.join(root, 'www', 'index.html');
       box-shadow:0 0 30px 8px rgba(255,110,60,0.45); top:70px; }
   </style></head><body><div class="noren"></div>
     <div class="lantern" style="left:560px"></div>
-    <div class="title">さんきゅう<br><span>やきとり</span></div>
-    <div class="sub">焼き加減を見極めて、串をフリック！</div>
+    <div class="title">${f.title}</div>
+    <div class="sub">${f.sub}</div>
     <img src="${icon}"></body></html>`);
   await p.evaluate(() => document.fonts.ready);
   await p.waitForTimeout(300);
-  await p.screenshot({ path: path.join(out, 'feature-graphic.png') });
+  await p.screenshot({ path: path.join(out, f.file) });
+  }
 
   // アイコン 512×512
   await p.setViewportSize({ width: 512, height: 512 });
