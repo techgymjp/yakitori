@@ -11,10 +11,9 @@ window.Ads = (() => {
         banner: 'ca-app-pub-3940256099942544/6300978111',
       },
       // 本番の広告ユニット(AdMob の「さんきゅうやきとり」Android)。空の種類は本番ビルドでは出さない
-      // TODO: リワードの ID が届いたら入れる
       production: {
         interstitial: 'ca-app-pub-6411535997477460/5046609742',
-        rewarded: '',
+        rewarded: 'ca-app-pub-6411535997477460/2420446403',
         banner: 'ca-app-pub-6411535997477460/5572177172',
       },
     },
