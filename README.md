@@ -23,6 +23,7 @@
 - 日本語と英語に対応（端末の言語で自動選択。トップ画面・結果画面のボタンで切り替え。`?lang=en` / `?lang=ja` でも指定可）
 - 結果画面からシェアできます（シェア文には紹介記事 https://techgym.jp/column/claude-code-game-yakitori/ が入ります）
 - ベスト記録は端末に保存されます
+- Web 版のトップ画面と「あそびかた」に、Android アプリ版（Google Play）へのリンク（新しいタブで開く）。アプリの中には入れていません（下記）
 
 ## 音
 
@@ -57,9 +58,13 @@
   - EU など同意が必要な地域ではトップ画面に「広告の設定」
 - トップ画面にバージョン（ビルド番号）とプライバシーポリシーへのリンク
 
+**Web 版だけの部分**：Google Play へのリンクなど Web 版だけの部分は、`<!-- web-only -->` … `<!-- /web-only -->`（HTML）、`// web-only:start` … `// web-only:end`（JS）、`/* web-only:start */` … `/* web-only:end */`（CSS）で囲んでいます。
+アプリ用のビルド `npm run build:app`（`APP_BUILD=1`）では、この範囲を取り除き、`play.google.com` などが残っていたらビルドを止めます（ストアへのリンクや端末で隠す処理がアプリに入っていると、iOS の審査で「隠した機能」と見られるため）。
+Web 版の公開（Vercel）は従来どおり `npm run build` です。
+
 ビルドは GitHub Actions（`.github/workflows/android.yml`）で行います。
 
-1. `npm ci` → `npm run build`（`www/` に Web ファイルをコピーし、`ads-config.js` と `build-info.js` を生成）→ `npx cap sync android` → `./gradlew assembleDebug`
+1. `npm ci` → `npm run build:app`（`www/` に Web ファイルをコピーし、`ads-config.js` と `build-info.js` を生成）→ `npx cap sync android` → `./gradlew assembleDebug`
 2. 既定ブランチなら、Release `android-latest` の `yakitori.apk` を差し替え（動作確認用・テスト広告。QR コード: `docs/apk-qr.png`）
 3. GitHub Secrets に署名鍵（`ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD`）があれば、本番広告で署名付き AAB を作り Artifact に上げる
 

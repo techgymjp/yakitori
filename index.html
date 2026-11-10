@@ -768,6 +768,18 @@
             min-height: 1.2em;
             text-align: center;
         }
+        /* web-only:start */
+        /* Android アプリ版へのリンク（Web 版だけ。アプリ用のビルドでは取り除く） */
+        .store-link {
+            display: inline-block;
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            padding: 4px 8px;
+        }
+        /* web-only:end */
         .legal {
             font-size: 12px;
             color: rgba(246,236,214,0.7);
@@ -845,6 +857,9 @@
             <button class="primary-btn" id="startBtn" data-i18n="startBtn">開店</button>
             <button class="secondary-btn" id="howtoBtn" data-i18n="howtoBtn">あそびかた</button>
         </div>
+        <!-- web-only -->
+        <a class="store-link" href="https://play.google.com/store/apps/details?id=jp.techgym.yakitori" target="_blank" rel="noopener" data-i18n="playLink">📱 Android アプリ版（Google Play）</a>
+        <!-- /web-only -->
         <div class="legal">
             <span id="buildInfo"></span>
             <a href="https://techgym.jp/privacy-policy/" id="privacyLink" target="_blank" rel="noopener" data-i18n="privacy">プライバシーポリシー</a>
@@ -864,6 +879,9 @@
             <button class="primary-btn" id="howtoPlay" data-i18n="startBtn">開店</button>
             <button class="secondary-btn" id="howtoBack" data-i18n="backTop">トップへ</button>
         </div>
+        <!-- web-only -->
+        <a class="store-link" href="https://play.google.com/store/apps/details?id=jp.techgym.yakitori" target="_blank" rel="noopener" data-i18n="playLink">📱 Android アプリ版（Google Play）</a>
+        <!-- /web-only -->
     </div>
 
     <!-- ポーズ -->
@@ -1010,6 +1028,9 @@
                 contLoading: '広告を読み込み中…',
                 contFail: '広告を読み込めませんでした',
                 extended: (n) => `延長 ${n}回`,
+                // web-only:start
+                playLink: '📱 Android アプリ版（Google Play）',
+                // web-only:end
                 copied: 'リンクをコピーしました',
                 shareFailed: 'シェアできませんでした'
             },
@@ -1061,6 +1082,9 @@
                 contLoading: 'Loading ad…',
                 contFail: 'Could not load the ad',
                 extended: (n) => `Extended ${n}×`,
+                // web-only:start
+                playLink: '📱 Get the Android app on Google Play',
+                // web-only:end
                 copied: 'Link copied',
                 shareFailed: 'Could not share'
             }
