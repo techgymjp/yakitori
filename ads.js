@@ -13,7 +13,7 @@ window.Ads = (() => {
       // 本番の広告ユニット(AdMob の「さんきゅうやきとり」Android)。空の種類は本番ビルドでは出さない
       production: {
         interstitial: 'ca-app-pub-6411535997477460/9629642572',
-        rewarded: 'ca-app-pub-6411535997477460/2420446403',
+        rewarded: 'ca-app-pub-6411535997477460/6563274342',
         banner: 'ca-app-pub-6411535997477460/8295158418',
       },
     },
