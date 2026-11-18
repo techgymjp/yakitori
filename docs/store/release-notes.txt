@@ -1,0 +1,21 @@
+Google Play リリースノート（Play Console の「リリースノート」欄にそのまま貼る。500 文字以内）
+
+=== 1.0.0（バージョンコード 16） ===
+
+<ja-JP>
+・より多くの Android 端末に対応しました
+・広告の表示を改善しました
+</ja-JP>
+<en-US>
+• Supports more Android devices
+• Improved ad display
+</en-US>
+
+=== 1.0.0（バージョンコード 9）はじめてのリリース ===
+
+<ja-JP>
+はじめてのリリースです。
+</ja-JP>
+<en-US>
+First release.
+</en-US>
